@@ -20,16 +20,32 @@ import java.util.ArrayList;
  */
 public class FavoriteFragment extends Fragment implements MainActivity.OnFragmentDatasetChanged {
 
+    private static FavoriteFragment instance = null;
     ArrayList<Contact> contacts = new ArrayList<>();
+    ArrayList<Contact> allContacts;
     ArrayList<Long> favorites;
     View view;
-    private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mAdapter;
     RecyclerView.LayoutManager mLayoutManager;
     Parcelable state;
+    boolean loadContactDone = false;
+    boolean loadViewDone = false;
+    private RecyclerView mRecyclerView;
+    private RecyclerView.Adapter mAdapter;
 
     public FavoriteFragment() {
-        // Required empty public constructor
+    }
+
+    public static FavoriteFragment getInstance() {
+        if (instance == null) {
+            instance = new FavoriteFragment();
+        }
+        return instance;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        favorites = DatabaseController.getInstance(getActivity()).loadFavorites();
     }
 
     @Override
@@ -45,19 +61,26 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
         }
         super.onResume();
     }
+
     @Override
     public void onContactLoaded(final ArrayList<Contact> allContacts) {
+        this.allContacts = allContacts;
+        loadContactDone = true;
+        if (loadViewDone) setContactIntoView();
+    }
+
+    private void setContactIntoView() {
+        if (!(loadContactDone && loadViewDone)) return;
         contacts = new ArrayList<>();
-        ProgressBar progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
         for (Contact c : allContacts) {
             if (favorites.contains(Long.parseLong(c.getId()))) {
                 contacts.add(c);
             }
         }
+        ProgressBar progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
         progressBar.setVisibility(View.GONE);
         mAdapter = new ContactAdapter(contacts);
         mRecyclerView.setAdapter(mAdapter);
-
     }
 
     @Override
@@ -79,17 +102,9 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
                     }
                 })
         );
-        favorites = DatabaseController.getInstance(getActivity()).loadFavorites();
+        loadViewDone = true;
+        if (loadContactDone) setContactIntoView();
         return view;
-    }
-
-    private static FavoriteFragment instance = null;
-
-    public static FavoriteFragment getInstance() {
-        if (instance == null) {
-            instance = new FavoriteFragment();
-        }
-        return instance;
     }
 
     public void onFavoriteAdded(Contact contact) {
@@ -110,5 +125,4 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
         }
         mAdapter.notifyDataSetChanged();
     }
-
 }

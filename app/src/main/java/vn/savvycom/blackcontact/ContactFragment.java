@@ -21,19 +21,34 @@ import java.util.ArrayList;
  */
 public class ContactFragment extends Fragment implements MainActivity.OnFragmentDatasetChanged {
 
+    private static ContactFragment instance = null;
     ArrayList<Contact> contacts = new ArrayList<>();
     View view;
-    private RecyclerView mRecyclerView;
     Parcelable state;
     RecyclerView.LayoutManager mLayoutManager;
+    boolean loadContactDone = false, loadViewDone = false;
+    private RecyclerView mRecyclerView;
 
     public ContactFragment() {
         // Required empty public constructor
     }
 
+    public static Fragment getInstance() {
+        if (instance == null) {
+            instance = new ContactFragment();
+        }
+        return instance;
+    }
+
     @Override
     public void onContactLoaded(ArrayList<Contact> newContacts) {
         contacts = newContacts;
+        loadContactDone = true;
+        if (loadViewDone) setContactIntoView();
+    }
+
+    private void setContactIntoView() {
+        if (!(loadContactDone && loadViewDone)) return;
         ProgressBar progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
         progressBar.setVisibility(View.GONE);
         RecyclerView.Adapter mAdapter = new ContactAdapter(contacts);
@@ -60,6 +75,8 @@ public class ContactFragment extends Fragment implements MainActivity.OnFragment
                     }
                 })
         );
+        loadViewDone = true;
+        if (loadContactDone) setContactIntoView();
         return view;
     }
 
@@ -75,15 +92,6 @@ public class ContactFragment extends Fragment implements MainActivity.OnFragment
             mLayoutManager.onRestoreInstanceState(state);
         }
         super.onResume();
-    }
-
-    private static ContactFragment instance = null;
-
-    public static Fragment getInstance() {
-        if (instance == null) {
-            instance = new ContactFragment();
-        }
-        return instance;
     }
 
 
