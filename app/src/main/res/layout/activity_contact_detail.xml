@@ -1,0 +1,82 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="vn.savvycom.blackcontact.ContactDetailActivity">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:id="@+id/place"
+            android:src="@drawable/icon_google"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:contentDescription="@string/content_description" />
+
+        <ImageView
+            android:id="@+id/photo"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:src="@mipmap/ic_launcher"
+            android:contentDescription="@string/content_description" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text="@string/placeholder"
+        android:textSize="30sp" />
+
+    <LinearLayout
+        style="?android:attr/buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/button_call"
+            android:background="@drawable/view_state"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:scaleType="centerInside"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:contentDescription="@string/content_description"
+            android:src="@drawable/ic_call_white" />
+
+        <ImageButton
+            android:id="@+id/button_text"
+            android:background="@drawable/view_state"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:scaleType="centerInside"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:contentDescription="@string/content_description"
+            android:src="@drawable/ic_message_white" />
+    </LinearLayout>
+
+    <ListView
+        android:layout_width="match_parent"
+        android:id="@+id/phone_list"
+        android:layout_height="wrap_content">
+
+    </ListView>
+
+</LinearLayout>

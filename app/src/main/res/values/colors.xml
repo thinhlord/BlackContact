@@ -1,0 +1,7 @@
+<resources>
+    <color name="colorPrimary">@color/md_blue_500</color>
+    <color name="colorPrimaryDark">@color/md_blue_700</color>
+    <color name="colorAccent">@color/md_green_500</color>
+    <color name="colorSecondary">@color/md_green_500</color>
+    <color name="colorSecondaryDark">@color/md_green_700</color>
+</resources>
