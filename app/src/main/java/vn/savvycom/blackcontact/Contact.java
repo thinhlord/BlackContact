@@ -15,19 +15,16 @@ public class Contact implements Parcelable {
     private String name;
     private Bitmap photo;
     private ArrayList<String> phone;
-
-    public String getAccountType() {
-        return accountType;
-    }
-
+    private ArrayList<String> mail;
     String accountType;
 
-    public Contact(String id, String name, Bitmap photo, String accountType, ArrayList<String> phone) {
+    public Contact(String id, String name, Bitmap photo, String accountType, ArrayList<String> phone, ArrayList<String> mail) {
         this.id = id;
         this.name = name;
         this.photo = photo;
         this.accountType = accountType;
         this.phone = phone;
+        this.mail = mail;
     }
 
     public String getId() {
@@ -46,21 +43,39 @@ public class Contact implements Parcelable {
         return phone;
     }
 
+    public ArrayList<String> getMail() {
+        return mail;
+    }
+
+    public String getAccountType() {
+        return accountType;
+    }
+
     public void addPhones(ArrayList<String> newPhones) {
         phone.addAll(newPhones);
     }
 
+    public void addMails(ArrayList<String> mails) {
+        mail.addAll(mails);
+    }
+
     protected Contact(Parcel in) {
-        accountType = in.readString();
         id = in.readString();
         name = in.readString();
         photo = (Bitmap) in.readValue(Bitmap.class.getClassLoader());
         if (in.readByte() == 0x01) {
-            phone = new ArrayList<>();
+            phone = new ArrayList<String>();
             in.readList(phone, String.class.getClassLoader());
         } else {
             phone = null;
         }
+        if (in.readByte() == 0x01) {
+            mail = new ArrayList<String>();
+            in.readList(mail, String.class.getClassLoader());
+        } else {
+            mail = null;
+        }
+        accountType = in.readString();
     }
 
     @Override
@@ -70,7 +85,6 @@ public class Contact implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(accountType);
         dest.writeString(id);
         dest.writeString(name);
         dest.writeValue(photo);
@@ -80,8 +94,16 @@ public class Contact implements Parcelable {
             dest.writeByte((byte) (0x01));
             dest.writeList(phone);
         }
+        if (mail == null) {
+            dest.writeByte((byte) (0x00));
+        } else {
+            dest.writeByte((byte) (0x01));
+            dest.writeList(mail);
+        }
+        dest.writeString(accountType);
     }
 
+    @SuppressWarnings("unused")
     public static final Parcelable.Creator<Contact> CREATOR = new Parcelable.Creator<Contact>() {
         @Override
         public Contact createFromParcel(Parcel in) {

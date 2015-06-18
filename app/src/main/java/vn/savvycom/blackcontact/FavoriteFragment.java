@@ -22,8 +22,8 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
 
     private static FavoriteFragment instance = null;
     ArrayList<Contact> contacts = new ArrayList<>();
-    ArrayList<Contact> allContacts;
-    ArrayList<Long> favorites;
+    ArrayList<Contact> allContacts = new ArrayList<>();
+    ArrayList<Long> favorites = new ArrayList<>();
     View view;
     RecyclerView.LayoutManager mLayoutManager;
     Parcelable state;
@@ -45,7 +45,6 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        favorites = DatabaseController.getInstance(getActivity()).loadFavorites();
     }
 
     @Override
@@ -69,9 +68,15 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
         if (loadViewDone) setContactIntoView();
     }
 
+    @Override
+    public void addItem(Contact contact) {
+
+    }
+
     private void setContactIntoView() {
         if (!(loadContactDone && loadViewDone)) return;
         contacts = new ArrayList<>();
+        favorites = DatabaseController.getInstance(getActivity()).loadFavorites();
         for (Contact c : allContacts) {
             if (favorites.contains(Long.parseLong(c.getId()))) {
                 contacts.add(c);

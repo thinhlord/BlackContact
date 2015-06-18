@@ -4,7 +4,6 @@ import android.content.ContentProviderOperation;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -97,7 +96,7 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                     .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
                     .build());
 
-            // names
+            // name
             operationList.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                     .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
                     .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
@@ -105,6 +104,7 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                     .build());
 
             // phones
+            //ArrayList<String> phones = new ArrayList<>();
             for (int i = 0; i < phoneGroupLayout.getChildCount(); i++) {
                 String phoneNumber = ((EditText) phoneGroupLayout.getChildAt(i).findViewById(R.id.phone_number)).getText().toString();
                 int phoneType;
@@ -129,10 +129,11 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                         .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phoneNumber)
                         .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, phoneType)
                         .build());
-                Log.d("PHONE", phoneNumber + " " + phoneType);
+                //phones.add(phoneNumber);
             }
 
             // mails
+            //ArrayList<String> mails = new ArrayList<>();
             for (int i = 0; i < mailGroupLayout.getChildCount(); i++) {
                 String email = ((EditText) mailGroupLayout.getChildAt(i).findViewById(R.id.email)).getText().toString();
                 int mailType;
@@ -157,7 +158,7 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                         .withValue(ContactsContract.CommonDataKinds.Email.DATA, email)
                         .withValue(ContactsContract.CommonDataKinds.Email.TYPE, mailType)
                         .build());
-                Log.d("MAIL", email + " " + mailType);
+                //mails.add(email);
             }
 
             try {

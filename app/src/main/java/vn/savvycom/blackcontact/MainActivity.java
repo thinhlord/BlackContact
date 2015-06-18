@@ -93,13 +93,16 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1) {
-            if (resultCode == RESULT_OK){
+            if (resultCode == RESULT_OK) {
                 reload();
+//                Contact newContact = loadContacts((Uri) data.getExtras().get("newID"));
+//                ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(0)).addItem(newContact);
             }
         }
     }
 
     private void loadContacts() {
+        contacts.clear();
         ContentResolver cr = getContentResolver();
         Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         if (cur.getCount() > 0) {
@@ -131,13 +134,27 @@ public class MainActivity extends BaseActivity {
                         String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                         phone.add(phoneNo);
                     }
+                    pCur.close();
+
+                    // Get all email
+                    ArrayList<String> mails = new ArrayList<>();
+                    Cursor pCurs = cr.query(
+                            ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                            null,
+                            ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
+                            new String[]{id}, null);
+                    while (pCurs.moveToNext()) {
+                        String nextMail = pCurs.getString(pCurs.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS));
+                        mails.add(nextMail);
+                    }
+                    pCurs.close();
+
                     Bitmap photo = null;
                     InputStream inputStream = openDisplayPhoto(Long.parseLong(id));
                     if (inputStream != null) {
                         photo = BitmapFactory.decodeStream(inputStream);
                     }
-                    contacts.add(new Contact(id, name, photo, accountType, phone));
-                    pCur.close();
+                    contacts.add(new Contact(id, name, photo, accountType, phone, mails));
                 }
             }
         }
@@ -159,6 +176,7 @@ public class MainActivity extends BaseActivity {
 
     public interface OnFragmentDatasetChanged {
         void onContactLoaded(ArrayList<Contact> contacts);
+        void addItem(Contact contact);
     }
 
     private class LoadContactTask extends AsyncTask<Void, Void, Void> {
@@ -173,7 +191,7 @@ public class MainActivity extends BaseActivity {
         }
     }
 
-    private class ContactComparator implements Comparator<Contact> {
+    public static class ContactComparator implements Comparator<Contact> {
         public int compare(Contact left, Contact right) {
             return left.getName().compareTo(right.getName());
         }

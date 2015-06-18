@@ -6,9 +6,12 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -34,8 +37,15 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
                 imageView.setImageResource(R.mipmap.ic_launcher);
             }
             ((TextView) findViewById(R.id.name)).setText(contact.getName());
-            ListView listView = (ListView) findViewById(R.id.phone_list);
-            listView.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, contact.getPhone()));
+
+            ListView phoneList = (ListView) findViewById(R.id.phone_list);
+            setListViewHeightBasedOnChildren(phoneList);
+            phoneList.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, contact.getPhone()));
+
+            ListView mailList = (ListView) findViewById(R.id.mail_list);
+            setListViewHeightBasedOnChildren(mailList);
+            mailList.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, contact.getMail()));
+
             ImageView typeImage = (ImageView) findViewById(R.id.place);
             if (contact.getAccountType().contains("sim")) typeImage.setImageResource(R.drawable.ic_sim_card);
             else if (contact.getAccountType().contains("google")) typeImage.setImageResource(R.drawable.icon_google);
@@ -101,5 +111,27 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.fromParts("sms", contact.getPhone().get(0), null)));
                 break;
         }
+    }
+
+    public static void setListViewHeightBasedOnChildren(ListView listView) {
+        ListAdapter listAdapter = listView.getAdapter();
+        if (listAdapter == null) {
+            // pre-condition
+            return;
+        }
+
+        int totalHeight = listView.getPaddingTop() + listView.getPaddingBottom();
+        for (int i = 0; i < listAdapter.getCount(); i++) {
+            View listItem = listAdapter.getView(i, null, listView);
+            if (listItem instanceof ViewGroup) {
+                listItem.setLayoutParams(new AbsListView.LayoutParams(AbsListView.LayoutParams.WRAP_CONTENT, AbsListView.LayoutParams.WRAP_CONTENT));
+            }
+            listItem.measure(0, 0);
+            totalHeight += listItem.getMeasuredHeight();
+        }
+
+        ViewGroup.LayoutParams params = listView.getLayoutParams();
+        params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
+        listView.setLayoutParams(params);
     }
 }
