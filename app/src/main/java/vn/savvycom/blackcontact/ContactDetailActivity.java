@@ -3,6 +3,8 @@ package vn.savvycom.blackcontact;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -36,29 +38,22 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
 
             LinearLayout phoneList = (LinearLayout) findViewById(R.id.phone_list);
             if (contact.getPhone().size() != 0) {
-                for (String s : contact.getPhone()) {
-                    TextView phone = new TextView(this);
-                    phone.setText(s);
-                    phoneList.addView(phone);
+                for (int i = 0; i < contact.getPhone().size(); i++) {
+                    addPhoneView(contact.getPhone().get(i), contact.getPhoneType().get(i), phoneList);
                 }
             } else {
-                TextView phone = new TextView(this);
-                phone.setText("None");
-                phoneList.addView(phone);
+                addPhoneView("None", null, phoneList);
             }
 
             LinearLayout mailList = (LinearLayout) findViewById(R.id.mail_list);
             if (contact.getMail().size() != 0) {
-                for (String s : contact.getMail()) {
-                    TextView mail = new TextView(this);
-                    mail.setText(s);
-                    mailList.addView(mail);
+                for (int i = 0; i < contact.getMail().size(); i++) {
+                    addMailView(contact.getMail().get(i), contact.getMailType().get(i), mailList);
                 }
             } else {
-                TextView mail = new TextView(this);
-                mail.setText("None");
-                mailList.addView(mail);
+                addMailView("None", null, mailList);
             }
+
             ImageView typeImage = (ImageView) findViewById(R.id.place);
             if (contact.getAccountType().contains("sim")) typeImage.setImageResource(R.drawable.ic_sim_card);
             else if (contact.getAccountType().contains("google")) typeImage.setImageResource(R.drawable.icon_google);
@@ -69,6 +64,60 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
             call.setOnClickListener(this);
             text.setOnClickListener(this);
         }
+    }
+
+    private void addPhoneView(String phone, String type, LinearLayout parent) {
+        View newPhoneView = LayoutInflater.from(this).inflate(R.layout.detail_phone_number_layout, null);
+        if (phone.equals("None")) {
+            ((TextView) newPhoneView.findViewById(R.id.phone_type)).setText(phone);
+        } else {
+            int typeInt = Integer.parseInt(type);
+            String typeStr;
+            switch (typeInt) {
+                case ContactsContract.CommonDataKinds.Phone.TYPE_HOME:
+                    typeStr = "Home";
+                    break;
+                case ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE:
+                    typeStr = "Mobile";
+                    break;
+                case ContactsContract.CommonDataKinds.Phone.TYPE_WORK:
+                    typeStr = "Work";
+                    break;
+                default:
+                    typeStr = "Other";
+                    break;
+            }
+            ((TextView) newPhoneView.findViewById(R.id.phone_type)).setText(typeStr);
+            ((TextView) newPhoneView.findViewById(R.id.phone_number)).setText(phone);
+        }
+        parent.addView(newPhoneView);
+    }
+
+    private void addMailView(String mail, String type, LinearLayout parent) {
+        View newPhoneView = LayoutInflater.from(this).inflate(R.layout.detail_phone_number_layout, null);
+        if (mail.equals("None")) {
+            ((TextView) newPhoneView.findViewById(R.id.phone_type)).setText(mail);
+        } else {
+            int typeInt = Integer.parseInt(type);
+            String typeStr;
+            switch (typeInt) {
+                case ContactsContract.CommonDataKinds.Email.TYPE_HOME:
+                    typeStr = "Home";
+                    break;
+                case ContactsContract.CommonDataKinds.Email.TYPE_MOBILE:
+                    typeStr = "Mobile";
+                    break;
+                case ContactsContract.CommonDataKinds.Email.TYPE_WORK:
+                    typeStr = "Work";
+                    break;
+                default:
+                    typeStr = "Other";
+                    break;
+            }
+            ((TextView) newPhoneView.findViewById(R.id.phone_type)).setText(typeStr);
+            ((TextView) newPhoneView.findViewById(R.id.phone_number)).setText(mail);
+        }
+        parent.addView(newPhoneView);
     }
 
     @Override

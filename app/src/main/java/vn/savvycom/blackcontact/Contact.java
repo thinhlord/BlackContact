@@ -61,6 +61,14 @@ public class Contact implements Parcelable {
         return mail;
     }
 
+    public ArrayList<String> getPhoneType() {
+        return phoneType;
+    }
+
+    public ArrayList<String> getMailType() {
+        return mailType;
+    }
+
     public String getAccountType() {
         return accountType;
     }

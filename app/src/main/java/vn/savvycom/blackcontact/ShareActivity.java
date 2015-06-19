@@ -282,6 +282,7 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
             Picasso.with(this)
                     .load(new File(filePath))
                     .resize(500, 500)
+                    .onlyScaleDown()
                     .centerInside()
                     .into(imageView);
             SharePhoto photo = new SharePhoto.Builder()
@@ -330,7 +331,7 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
 
             File file = new File(filePath);
             if (file.length() > LIMIT) {
-                Toast.makeText(context, "Cannot share video over 12MB", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Cannot share photo over 12MB", Toast.LENGTH_LONG).show();
                 this.cancel(true);
                 return null;
             }

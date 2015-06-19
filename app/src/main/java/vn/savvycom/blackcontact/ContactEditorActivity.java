@@ -41,7 +41,7 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
         contact = getIntent().getParcelableExtra(EXTRA_CONTACT);
         if (contact == null) {
             setTitle("Add new contact");
-            addPhoneView(null);
+            addPhoneView(null, null);
             add = true;
         } else {
             add = false;
@@ -54,8 +54,13 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                 imageView.setImageResource(R.mipmap.ic_launcher);
             }
             ((TextView) findViewById(R.id.name)).setText(contact.getName());
-            for (String phoneNumber : contact.getPhone()) {
-                addPhoneView(phoneNumber);
+            if (contact.getPhone().size() == 0) {
+                addPhoneView(null, null);
+            } else for (int i = 0; i < contact.getPhone().size(); i++) {
+                addPhoneView(contact.getPhone().get(i), contact.getPhoneType().get(i));
+            }
+            for (int i = 0; i < contact.getMail().size(); i++) {
+                addEmailView(contact.getMail().get(i), contact.getMailType().get(i));
             }
         }
     }
@@ -251,19 +256,37 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.add_phone:
-                addPhoneView(null);
+                addPhoneView(null, null);
                 break;
             case R.id.add_mail:
-                addEmailView(null);
+                addEmailView(null, null);
                 break;
         }
     }
 
-    private void addPhoneView(String phone) {
-        if (phoneGroupLayout.getChildCount() >= 6) return;
-        final View newPhoneView = LayoutInflater.from(this).inflate(R.layout.phone_number_child_layout, null);
+    private void addPhoneView(String phone, String type) {
+        //if (phoneGroupLayout.getChildCount() >= 6) return;
+        final View newPhoneView = LayoutInflater.from(this).inflate(R.layout.edit_phone_number_layout, null);
         Spinner spinner = (Spinner) newPhoneView.findViewById(R.id.phone_type);
         spinner.setAdapter(phoneTypeAdapter);
+        if (type != null) {
+            int typeInt = Integer.parseInt(type);
+            switch (typeInt) {
+                case ContactsContract.CommonDataKinds.Phone.TYPE_HOME:
+                    typeInt = 0;
+                    break;
+                case ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE:
+                    typeInt = 1;
+                    break;
+                case ContactsContract.CommonDataKinds.Phone.TYPE_WORK:
+                    typeInt = 2;
+                    break;
+                default:
+                    typeInt = 3;
+                    break;
+            }
+            spinner.setSelection(typeInt);
+        }
         if (phone != null) {
             EditText phoneView = (EditText) newPhoneView.findViewById(R.id.phone_number);
             phoneView.setText(phone);
@@ -277,11 +300,29 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
         phoneGroupLayout.addView(newPhoneView);
     }
 
-    private void addEmailView(String mailAddress) {
-        if (mailGroupLayout.getChildCount() >= 6) return;
-        final View newMailView = LayoutInflater.from(this).inflate(R.layout.email_child_layout, null);
+    private void addEmailView(String mailAddress, String type) {
+        //if (mailGroupLayout.getChildCount() >= 6) return;
+        final View newMailView = LayoutInflater.from(this).inflate(R.layout.edit_email_layout, null);
         Spinner spinner = (Spinner) newMailView.findViewById(R.id.mail_type);
         spinner.setAdapter(phoneTypeAdapter);
+        if (type != null) {
+            int typeInt = Integer.parseInt(type);
+            switch (typeInt) {
+                case ContactsContract.CommonDataKinds.Email.TYPE_HOME:
+                    typeInt = 0;
+                    break;
+                case ContactsContract.CommonDataKinds.Email.TYPE_MOBILE:
+                    typeInt = 1;
+                    break;
+                case ContactsContract.CommonDataKinds.Email.TYPE_WORK:
+                    typeInt = 2;
+                    break;
+                default:
+                    typeInt = 3;
+                    break;
+            }
+            spinner.setSelection(typeInt);
+        }
         if (mailAddress != null) {
             EditText email = (EditText) newMailView.findViewById(R.id.email);
             email.setText(mailAddress);

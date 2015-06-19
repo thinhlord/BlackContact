@@ -82,33 +82,38 @@
                     android:src="@drawable/ic_message_white" />
             </LinearLayout>
 
-            <TextView
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:textSize="20sp"
-                android:text="Phone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
             <LinearLayout
+                android:background="@color/md_white_1000"
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:id="@+id/phone_list"
-                android:layout_height="wrap_content"></LinearLayout>
+                android:layout_height="wrap_content">
 
-            <TextView
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:textSize="20sp"
-                android:text="Emails"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                <TextView
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center"
+                    android:textSize="20sp"
+                    android:text="Phone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
 
             <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:id="@+id/mail_list"
                 android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center"
+                    android:textSize="20sp"
+                    android:text="Email"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
 
             </LinearLayout>
 

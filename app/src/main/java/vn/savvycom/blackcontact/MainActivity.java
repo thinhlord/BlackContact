@@ -156,6 +156,7 @@ public class MainActivity extends BaseActivity {
 
                     // Get all email
                     ArrayList<String> mails = new ArrayList<>();
+                    ArrayList<String> mailTypes = new ArrayList<>();
                     Cursor pCurs = cr.query(
                             ContactsContract.CommonDataKinds.Email.CONTENT_URI,
                             null,
@@ -163,7 +164,9 @@ public class MainActivity extends BaseActivity {
                             new String[]{id}, null);
                     while (pCurs.moveToNext()) {
                         String nextMail = pCurs.getString(pCurs.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS));
+                        String mailType = pCurs.getString(pCurs.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
                         mails.add(nextMail);
+                        mailTypes.add(mailType);
                     }
                     pCurs.close();
 
@@ -172,7 +175,7 @@ public class MainActivity extends BaseActivity {
                     if (inputStream != null) {
                         photo = BitmapFactory.decodeStream(inputStream);
                     }
-                    contacts.add(new Contact(id, name, photo, accountType, phones, mails));
+                    contacts.add(new Contact(id, name, photo, accountType, phones, phoneTypes, mails, mailTypes));
                 }
             }
         }
