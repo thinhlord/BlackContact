@@ -15,7 +15,9 @@ public class Contact implements Parcelable {
     private String name;
     private Bitmap photo;
     private ArrayList<String> phone;
+    private ArrayList<String> phoneType;
     private ArrayList<String> mail;
+    private ArrayList<String> mailType;
     String accountType;
 
     public Contact(String id, String name, Bitmap photo, String accountType, ArrayList<String> phone, ArrayList<String> mail) {
@@ -25,6 +27,18 @@ public class Contact implements Parcelable {
         this.accountType = accountType;
         this.phone = phone;
         this.mail = mail;
+    }
+
+    public Contact(String id, String name, Bitmap photo, String accountType, ArrayList<String> phone, ArrayList<String> phoneType,
+                   ArrayList<String> mail, ArrayList<String> mailType) {
+        this.id = id;
+        this.name = name;
+        this.photo = photo;
+        this.accountType = accountType;
+        this.phone = phone;
+        this.mail = mail;
+        this.phoneType = phoneType;
+        this.mailType = mailType;
     }
 
     public String getId() {
@@ -64,16 +78,28 @@ public class Contact implements Parcelable {
         name = in.readString();
         photo = (Bitmap) in.readValue(Bitmap.class.getClassLoader());
         if (in.readByte() == 0x01) {
-            phone = new ArrayList<String>();
+            phone = new ArrayList<>();
             in.readList(phone, String.class.getClassLoader());
         } else {
             phone = null;
         }
         if (in.readByte() == 0x01) {
-            mail = new ArrayList<String>();
+            phoneType = new ArrayList<>();
+            in.readList(phoneType, String.class.getClassLoader());
+        } else {
+            phoneType = null;
+        }
+        if (in.readByte() == 0x01) {
+            mail = new ArrayList<>();
             in.readList(mail, String.class.getClassLoader());
         } else {
             mail = null;
+        }
+        if (in.readByte() == 0x01) {
+            mailType = new ArrayList<>();
+            in.readList(mailType, String.class.getClassLoader());
+        } else {
+            mailType = null;
         }
         accountType = in.readString();
     }
@@ -94,16 +120,27 @@ public class Contact implements Parcelable {
             dest.writeByte((byte) (0x01));
             dest.writeList(phone);
         }
+        if (phoneType == null) {
+            dest.writeByte((byte) (0x00));
+        } else {
+            dest.writeByte((byte) (0x01));
+            dest.writeList(phoneType);
+        }
         if (mail == null) {
             dest.writeByte((byte) (0x00));
         } else {
             dest.writeByte((byte) (0x01));
             dest.writeList(mail);
         }
+        if (mailType == null) {
+            dest.writeByte((byte) (0x00));
+        } else {
+            dest.writeByte((byte) (0x01));
+            dest.writeList(mailType);
+        }
         dest.writeString(accountType);
     }
 
-    @SuppressWarnings("unused")
     public static final Parcelable.Creator<Contact> CREATOR = new Parcelable.Creator<Contact>() {
         @Override
         public Contact createFromParcel(Parcel in) {

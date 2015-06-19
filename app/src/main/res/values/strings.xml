@@ -18,6 +18,7 @@
     <string name="action_save">Save</string>
     <string name="title_activity_music">Music</string>
     <string name="action_music">Music</string>
+    <string name="facebook_app_id">1650532361845540</string>
 
     <string-array name="phone_type">
         <item>Home</item>
@@ -25,4 +26,8 @@
         <item>Work</item>
         <item>Other</item>
     </string-array>
+    <string name="title_activity_share">ShareActivity</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_share">Share</string>
 </resources>

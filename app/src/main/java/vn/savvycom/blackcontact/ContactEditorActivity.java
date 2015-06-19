@@ -170,7 +170,80 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                 e.printStackTrace();
             }
         } else {
+            // name
+            ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
 
+            if (!name.getText().toString().equals(contact.getName())) {
+                operationList.add(ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+                        .withSelection(ContactsContract.Data.CONTACT_ID + "=?" + " AND " + ContactsContract.Data.MIMETYPE + "=?", new String[]{contact.getId(), ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE})
+                        .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name.getText().toString())
+                        .build());
+            }
+
+            // phones
+            //ArrayList<String> phones = new ArrayList<>();
+            for (int i = 0; i < phoneGroupLayout.getChildCount(); i++) {
+                String phoneNumber = ((EditText) phoneGroupLayout.getChildAt(i).findViewById(R.id.phone_number)).getText().toString();
+                int phoneType;
+                int selected = ((Spinner) phoneGroupLayout.getChildAt(i).findViewById(R.id.phone_type)).getSelectedItemPosition();
+                switch (selected) {
+                    case 0:
+                        phoneType = ContactsContract.CommonDataKinds.Phone.TYPE_HOME;
+                        break;
+                    case 1:
+                        phoneType = ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE;
+                        break;
+                    case 2:
+                        phoneType = ContactsContract.CommonDataKinds.Phone.TYPE_WORK;
+                        break;
+                    default:
+                        phoneType = ContactsContract.CommonDataKinds.Phone.TYPE_OTHER;
+                        break;
+                }
+                operationList.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                        .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                        .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+                        .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phoneNumber)
+                        .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, phoneType)
+                        .build());
+                //phones.add(phoneNumber);
+            }
+
+            // mails
+            //ArrayList<String> mails = new ArrayList<>();
+            for (int i = 0; i < mailGroupLayout.getChildCount(); i++) {
+                String email = ((EditText) mailGroupLayout.getChildAt(i).findViewById(R.id.email)).getText().toString();
+                int mailType;
+                int selected = ((Spinner) mailGroupLayout.getChildAt(i).findViewById(R.id.mail_type)).getSelectedItemPosition();
+                switch (selected) {
+                    case 0:
+                        mailType = ContactsContract.CommonDataKinds.Email.TYPE_HOME;
+                        break;
+                    case 1:
+                        mailType = ContactsContract.CommonDataKinds.Email.TYPE_MOBILE;
+                        break;
+                    case 2:
+                        mailType = ContactsContract.CommonDataKinds.Email.TYPE_WORK;
+                        break;
+                    default:
+                        mailType = ContactsContract.CommonDataKinds.Email.TYPE_OTHER;
+                        break;
+                }
+                operationList.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                        .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                        .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE)
+                        .withValue(ContactsContract.CommonDataKinds.Email.DATA, email)
+                        .withValue(ContactsContract.CommonDataKinds.Email.TYPE, mailType)
+                        .build());
+            }
+            try {
+                getContentResolver().applyBatch(ContactsContract.AUTHORITY, operationList);
+                Intent returnIntent = new Intent();
+                setResult(RESULT_OK, returnIntent);
+                finish();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

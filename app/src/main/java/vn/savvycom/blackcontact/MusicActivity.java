@@ -23,7 +23,6 @@ import java.util.List;
 
 
 public class MusicActivity extends BaseActivity implements View.OnClickListener {
-    public static final String songUrl = "http://download.f9.stream.nixcdn.com/239531354b47586c74f1d19fb98880e3/557eac7e/NhacCuaTui884/KhongPhaiDangVuaDau-SonTungMTP-3753840_hq.mp3";
     Intent playIntent;
     MaterialDialog dialog;
     boolean started = false;

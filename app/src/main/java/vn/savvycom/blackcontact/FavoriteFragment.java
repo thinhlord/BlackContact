@@ -69,7 +69,7 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
     }
 
     @Override
-    public void addItem(Contact contact) {
+    public void onPreLoad() {
 
     }
 

@@ -6,13 +6,9 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
-import android.widget.ListView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 
@@ -38,14 +34,31 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
             }
             ((TextView) findViewById(R.id.name)).setText(contact.getName());
 
-            ListView phoneList = (ListView) findViewById(R.id.phone_list);
-            setListViewHeightBasedOnChildren(phoneList);
-            phoneList.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, contact.getPhone()));
+            LinearLayout phoneList = (LinearLayout) findViewById(R.id.phone_list);
+            if (contact.getPhone().size() != 0) {
+                for (String s : contact.getPhone()) {
+                    TextView phone = new TextView(this);
+                    phone.setText(s);
+                    phoneList.addView(phone);
+                }
+            } else {
+                TextView phone = new TextView(this);
+                phone.setText("None");
+                phoneList.addView(phone);
+            }
 
-            ListView mailList = (ListView) findViewById(R.id.mail_list);
-            setListViewHeightBasedOnChildren(mailList);
-            mailList.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, contact.getMail()));
-
+            LinearLayout mailList = (LinearLayout) findViewById(R.id.mail_list);
+            if (contact.getMail().size() != 0) {
+                for (String s : contact.getMail()) {
+                    TextView mail = new TextView(this);
+                    mail.setText(s);
+                    mailList.addView(mail);
+                }
+            } else {
+                TextView mail = new TextView(this);
+                mail.setText("None");
+                mailList.addView(mail);
+            }
             ImageView typeImage = (ImageView) findViewById(R.id.place);
             if (contact.getAccountType().contains("sim")) typeImage.setImageResource(R.drawable.ic_sim_card);
             else if (contact.getAccountType().contains("google")) typeImage.setImageResource(R.drawable.icon_google);
@@ -111,27 +124,5 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.fromParts("sms", contact.getPhone().get(0), null)));
                 break;
         }
-    }
-
-    public static void setListViewHeightBasedOnChildren(ListView listView) {
-        ListAdapter listAdapter = listView.getAdapter();
-        if (listAdapter == null) {
-            // pre-condition
-            return;
-        }
-
-        int totalHeight = listView.getPaddingTop() + listView.getPaddingBottom();
-        for (int i = 0; i < listAdapter.getCount(); i++) {
-            View listItem = listAdapter.getView(i, null, listView);
-            if (listItem instanceof ViewGroup) {
-                listItem.setLayoutParams(new AbsListView.LayoutParams(AbsListView.LayoutParams.WRAP_CONTENT, AbsListView.LayoutParams.WRAP_CONTENT));
-            }
-            listItem.measure(0, 0);
-            totalHeight += listItem.getMeasuredHeight();
-        }
-
-        ViewGroup.LayoutParams params = listView.getLayoutParams();
-        params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
-        listView.setLayoutParams(params);
     }
 }

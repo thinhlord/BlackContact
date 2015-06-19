@@ -27,8 +27,16 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Locale;
 
+//import com.twitter.sdk.android.Twitter;
+//import com.twitter.sdk.android.core.TwitterAuthConfig;
+
 
 public class MainActivity extends BaseActivity {
+
+    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
+    private static final String TWITTER_KEY = "XLPlZaIWZL80pJi27Ln5jnVF8";
+    private static final String TWITTER_SECRET = "zxRNnSpFyXPlg7YXCvdkbRgwKY3kHS9tllv2z9hSPfnUGyXfqH";
+
 
     SectionsPagerAdapter mSectionsPagerAdapter;
     ViewPager mViewPager;
@@ -37,6 +45,8 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
+//        Fabric.with(this, new Twitter(authConfig));
         setActionBarIcon(R.mipmap.ic_launcher);
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
@@ -85,6 +95,10 @@ public class MainActivity extends BaseActivity {
                 Intent intentMusic = new Intent(this, MusicActivity.class);
                 startActivity(intentMusic);
                 return true;
+            case R.id.action_share:
+                Intent intentShare = new Intent(this, ShareActivity.class);
+                startActivity(intentShare);
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -123,8 +137,10 @@ public class MainActivity extends BaseActivity {
                         accountType = aCur.getString(aCur.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE));
                         aCur.close();
                     }
+
                     // Get all phone numbers
-                    ArrayList<String> phone = new ArrayList<>();
+                    ArrayList<String> phones = new ArrayList<>();
+                    ArrayList<String> phoneTypes = new ArrayList<>();
                     Cursor pCur = cr.query(
                             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                             null,
@@ -132,7 +148,9 @@ public class MainActivity extends BaseActivity {
                             new String[]{id}, null);
                     while (pCur.moveToNext()) {
                         String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                        phone.add(phoneNo);
+                        String phoneType = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
+                        phones.add(phoneNo);
+                        phoneTypes.add(phoneType);
                     }
                     pCur.close();
 
@@ -154,7 +172,7 @@ public class MainActivity extends BaseActivity {
                     if (inputStream != null) {
                         photo = BitmapFactory.decodeStream(inputStream);
                     }
-                    contacts.add(new Contact(id, name, photo, accountType, phone, mails));
+                    contacts.add(new Contact(id, name, photo, accountType, phones, mails));
                 }
             }
         }
@@ -176,10 +194,16 @@ public class MainActivity extends BaseActivity {
 
     public interface OnFragmentDatasetChanged {
         void onContactLoaded(ArrayList<Contact> contacts);
-        void addItem(Contact contact);
+
+        void onPreLoad();
     }
 
     private class LoadContactTask extends AsyncTask<Void, Void, Void> {
+        protected void onPreExecute() {
+            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(0)).onContactLoaded(contacts);
+            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(1)).onContactLoaded(contacts);
+        }
+
         protected Void doInBackground(Void... voids) {
             loadContacts();
             return null;

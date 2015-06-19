@@ -14,7 +14,6 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 
 /**
@@ -50,9 +49,11 @@ public class ContactFragment extends Fragment implements MainActivity.OnFragment
     }
 
     @Override
-    public void addItem(Contact contact) {
-        contacts.add(contact);
-        Collections.sort(contacts, new MainActivity.ContactComparator());
+    public void onPreLoad() {
+        if (getView() != null) {
+            getView().findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+            getView().findViewById(R.id.contacts_list).setVisibility(View.GONE);
+        }
     }
 
     private void setContactIntoView() {
@@ -61,6 +62,7 @@ public class ContactFragment extends Fragment implements MainActivity.OnFragment
         progressBar.setVisibility(View.GONE);
         RecyclerView.Adapter mAdapter = new ContactAdapter(contacts);
         //mRecyclerView.removeAllViews();
+        mRecyclerView.setVisibility(View.VISIBLE);
         mRecyclerView.swapAdapter(mAdapter, false);
         //mRecyclerView.setAdapter(mAdapter);
     }

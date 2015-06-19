@@ -82,18 +82,35 @@
                     android:src="@drawable/ic_message_white" />
             </LinearLayout>
 
-            <ListView
+            <TextView
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:textSize="20sp"
+                android:text="Phone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:id="@+id/phone_list"
-                android:layout_height="wrap_content">
-            </ListView>
+                android:layout_height="wrap_content"></LinearLayout>
 
-            <ListView
+            <TextView
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:textSize="20sp"
+                android:text="Emails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:id="@+id/mail_list"
                 android:layout_height="wrap_content">
 
-            </ListView>
+            </LinearLayout>
 
         </LinearLayout>
 
