@@ -1,7 +1,10 @@
 package vn.savvycom.blackcontact;
 
 import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.view.LayoutInflater;
@@ -16,13 +19,16 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.MaterialDialog;
+
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 
 import vn.savvycom.blackcontact.Item.Contact;
 
 
 public class ContactEditorActivity extends BaseActivity implements View.OnClickListener {
-    public static final String EXTRA_CONTACT = "CONTACT";
     ArrayAdapter<CharSequence> phoneTypeAdapter;
     private Contact contact;
     private boolean add = true;
@@ -40,7 +46,7 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                 R.array.phone_type, android.R.layout.simple_spinner_item);
         phoneTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        contact = getIntent().getParcelableExtra(EXTRA_CONTACT);
+        contact = getIntent().getParcelableExtra(GlobalObject.EXTRA_CONTACT);
         if (contact == null) {
             setTitle("Add new contact");
             addPhoneView(null, null);
@@ -74,7 +80,8 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_contact_editor, menu);
+        if (!add) getMenuInflater().inflate(R.menu.menu_contact_editor, menu);
+        else getMenuInflater().inflate(R.menu.menu_contact_add, menu);
         return true;
     }
 
@@ -83,6 +90,21 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
         switch (item.getItemId()) {
             case R.id.action_save:
                 saveContact();
+                return true;
+            case R.id.action_del:
+                new MaterialDialog.Builder(this)
+                        .title("Confirm delete")
+                        .content("Do you want to delete this contact?")
+                        .positiveText("Yes")
+                        .negativeText("No")
+                        .callback(new MaterialDialog.ButtonCallback() {
+                            @Override
+                            public void onPositive(MaterialDialog dialog) {
+                                deleteContact();
+                                super.onPositive(dialog);
+                            }
+                        })
+                        .show();
                 return true;
         }
 
@@ -95,7 +117,15 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
             Toast.makeText(this, "Name is null", Toast.LENGTH_LONG).show();
             return;
         }
+        boolean sendNewContactBack = true;
+        for (Contact c : GlobalObject.allContacts) {
+            if (c.getName().equals(name.getText().toString())) {
+                sendNewContactBack = false;
+                break;
+            }
+        }
         if (add) {
+            // Add new
             ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
             operationList.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
                     .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
@@ -110,7 +140,8 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                     .build());
 
             // phones
-            //ArrayList<String> phones = new ArrayList<>();
+            ArrayList<String> phones = new ArrayList<>();
+            ArrayList<String> phoneTypes = new ArrayList<>();
             for (int i = 0; i < phoneGroupLayout.getChildCount(); i++) {
                 String phoneNumber = ((EditText) phoneGroupLayout.getChildAt(i).findViewById(R.id.phone_number)).getText().toString();
                 int phoneType;
@@ -135,11 +166,14 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                         .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phoneNumber)
                         .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, phoneType)
                         .build());
-                //phones.add(phoneNumber);
+                phones.add(phoneNumber);
+                phoneTypes.add("" + phoneType);
             }
 
             // mails
-            //ArrayList<String> mails = new ArrayList<>();
+            ArrayList<String> mails = new ArrayList<>();
+            ArrayList<String> mailTypes = new ArrayList<>();
+
             for (int i = 0; i < mailGroupLayout.getChildCount(); i++) {
                 String email = ((EditText) mailGroupLayout.getChildAt(i).findViewById(R.id.email)).getText().toString();
                 int mailType;
@@ -164,18 +198,38 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                         .withValue(ContactsContract.CommonDataKinds.Email.DATA, email)
                         .withValue(ContactsContract.CommonDataKinds.Email.TYPE, mailType)
                         .build());
-                //mails.add(email);
+                mails.add(email);
+                mailTypes.add("" + mailType);
             }
 
             try {
-                getContentResolver().applyBatch(ContactsContract.AUTHORITY, operationList);
+                ContentProviderResult[] results = getContentResolver().applyBatch(ContactsContract.AUTHORITY, operationList);
+                String id = results[0].uri.getLastPathSegment();
+                String accountType = null;
+                Cursor aCur = getContentResolver().query(
+                        ContactsContract.RawContacts.CONTENT_URI,
+                        null,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                        new String[]{id}, null);
+                if (aCur != null && aCur.getCount() > 0) {
+                    aCur.moveToFirst();
+                    accountType = aCur.getString(aCur.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE));
+                    aCur.close();
+                }
+                contact = new Contact(id, name.getText().toString(), null, accountType, phones, phoneTypes, mails, mailTypes);
                 Intent returnIntent = new Intent();
                 setResult(RESULT_OK, returnIntent);
+                if (sendNewContactBack) {
+                    returnIntent.putExtra(GlobalObject.EXTRA_CONTACT, contact);
+                    GlobalObject.allContacts.add(contact);
+                    Collections.sort(GlobalObject.allContacts, new GlobalObject.ContactComparator());
+                } else returnIntent.putExtra(GlobalObject.EXTRA_MERGE, true);
                 finish();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
+            // Update
             // name
             ArrayList<ContentProviderOperation> operationList = new ArrayList<>();
 
@@ -186,16 +240,20 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                                         ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE})
                         .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name.getText().toString())
                         .build());
+                contact.setName(name.getText().toString());
             }
 
+            contact.clearPhoneMail();
+
             // phones
-            //ArrayList<String> phones = new ArrayList<>();
             // Bad method: remove all numbers then add all current numbers in the UI
             operationList.add(ContentProviderOperation.newDelete(ContactsContract.Data.CONTENT_URI)
                     .withSelection(ContactsContract.Data.RAW_CONTACT_ID + "=? and " + ContactsContract.Data.MIMETYPE + "=?",
                             new String[]{contact.getId(), ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE})
                     .build());
 
+            ArrayList<String> phones = new ArrayList<>();
+            ArrayList<String> phoneTypes = new ArrayList<>();
             for (int i = 0; i < phoneGroupLayout.getChildCount(); i++) {
                 String phoneNumber = ((EditText) phoneGroupLayout.getChildAt(i).findViewById(R.id.phone_number)).getText().toString();
                 int phoneType;
@@ -220,11 +278,14 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                         .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phoneNumber)
                         .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, phoneType)
                         .build());
-                //phones.add(phoneNumber);
+                phones.add(phoneNumber);
+                phoneTypes.add("" + phoneType);
             }
+            contact.addPhones(phones, phoneTypes);
 
             // mails
-            //ArrayList<String> mails = new ArrayList<>();
+            ArrayList<String> mails = new ArrayList<>();
+            ArrayList<String> mailTypes = new ArrayList<>();
             operationList.add(ContentProviderOperation.newDelete(ContactsContract.Data.CONTENT_URI)
                     .withSelection(ContactsContract.Data.RAW_CONTACT_ID + "=? and " + ContactsContract.Data.MIMETYPE + "=?",
                             new String[]{contact.getId(), ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE})
@@ -253,11 +314,26 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                         .withValue(ContactsContract.CommonDataKinds.Email.DATA, email)
                         .withValue(ContactsContract.CommonDataKinds.Email.TYPE, mailType)
                         .build());
+                mails.add(email);
+                mailTypes.add("" + mailType);
             }
+            contact.addMails(mails, mailTypes);
+
             try {
                 getContentResolver().applyBatch(ContactsContract.AUTHORITY, operationList);
                 Intent returnIntent = new Intent();
                 setResult(RESULT_OK, returnIntent);
+                returnIntent.putExtra(GlobalObject.EXTRA_CONTACT, contact);
+                Iterator<Contact> iterator = GlobalObject.allContacts.iterator();
+                while (iterator.hasNext()) {
+                    Contact c = iterator.next();
+                    if (c.getId().equals(contact.getId())) {
+                        GlobalObject.allContacts.remove(c);
+                        break;
+                    }
+                }
+                GlobalObject.allContacts.add(contact);
+                Collections.sort(GlobalObject.allContacts, new GlobalObject.ContactComparator());
                 finish();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -347,5 +423,34 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
             }
         });
         mailGroupLayout.addView(newMailView);
+    }
+
+    public void deleteContact() {
+        final ContentResolver cr = getContentResolver();
+        final ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+        ops.add(ContentProviderOperation
+                .newDelete(ContactsContract.RawContacts.CONTENT_URI)
+                .withSelection(
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID
+                                + " = ?",
+                        new String[]{contact.getId()})
+                .build());
+        try {
+            cr.applyBatch(ContactsContract.AUTHORITY, ops);
+            Intent returnIntent = new Intent();
+            setResult(RESULT_OK, returnIntent);
+            returnIntent.putExtra(GlobalObject.EXTRA_DELETE, true);
+            Iterator<Contact> iterator = GlobalObject.allContacts.iterator();
+            while (iterator.hasNext()) {
+                Contact c = iterator.next();
+                if (c.getId().equals(contact.getId())) {
+                    GlobalObject.allContacts.remove(c);
+                    break;
+                }
+            }
+            finish();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

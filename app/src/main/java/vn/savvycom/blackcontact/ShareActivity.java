@@ -148,6 +148,10 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
             case R.id.btn_share:
                 if (shareType == LINK_TYPE) {
                     shareLink = ((TextView) shareContent.getChildAt(0).findViewById(R.id.content_link)).getText().toString();
+                    if (shareLink.equals("")) {
+                        Toast.makeText(this, "Link is empty, wth do you want to share? Nothing?", Toast.LENGTH_LONG).show();
+                        return;
+                    }
                     content = new ShareLinkContent.Builder().setContentUrl(Uri.parse(shareLink)).build();
                 }
                 final String des = ((EditText) findViewById(R.id.desc)).getText().toString();

@@ -25,7 +25,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     @Override
     public void onCreate() {
         super.onCreate();
-        Toast.makeText(getApplicationContext(), "Create", Toast.LENGTH_LONG).show();
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mediaPlayer.setOnPreparedListener(this);
@@ -41,7 +40,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (!mediaPlayer.isPlaying()) {
-            Toast.makeText(getApplicationContext(), "Prepare", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Connecting", Toast.LENGTH_LONG).show();
             mediaPlayer.prepareAsync();
         }
         return START_STICKY;
@@ -60,7 +59,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
-        Toast.makeText(getApplicationContext(), "Start", Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_LONG).show();
         mediaPlayer.start();
         sendBroadcast(true);
     }

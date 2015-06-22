@@ -12,10 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 
-import java.util.ArrayList;
-
-import vn.savvycom.blackcontact.Item.Contact;
-
 
 /**
  * A simple {@link Fragment} subclass.
@@ -23,7 +19,6 @@ import vn.savvycom.blackcontact.Item.Contact;
 public class ContactFragment extends Fragment implements MainActivity.OnFragmentDatasetChanged {
 
     private static ContactFragment instance = null;
-    ArrayList<Contact> contacts = new ArrayList<>();
     View view;
     Parcelable state;
     RecyclerView.LayoutManager mLayoutManager;
@@ -42,9 +37,7 @@ public class ContactFragment extends Fragment implements MainActivity.OnFragment
     }
 
     @Override
-    public void onContactLoaded(ArrayList<Contact> newContacts) {
-        //contacts.clear();
-        contacts = newContacts;
+    public void onContactLoaded() {
         loadContactDone = true;
         if (loadViewDone) setContactIntoView();
     }
@@ -61,7 +54,7 @@ public class ContactFragment extends Fragment implements MainActivity.OnFragment
         if (!(loadContactDone && loadViewDone)) return;
         ProgressBar progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
         progressBar.setVisibility(View.GONE);
-        RecyclerView.Adapter mAdapter = new ContactAdapter(contacts);
+        RecyclerView.Adapter mAdapter = new ContactAdapter(GlobalObject.allContacts, this.getActivity());
         //mRecyclerView.removeAllViews();
         mRecyclerView.setVisibility(View.VISIBLE);
         mRecyclerView.swapAdapter(mAdapter, false);
@@ -82,7 +75,7 @@ public class ContactFragment extends Fragment implements MainActivity.OnFragment
                     @Override
                     public void onItemClick(View view, int position) {
                         Intent intent = new Intent(getActivity(), ContactDetailActivity.class);
-                        intent.putExtra(ContactDetailActivity.EXTRA_CONTACT, contacts.get(position));
+                        intent.putExtra(GlobalObject.EXTRA_CONTACT, GlobalObject.allContacts.get(position));
                         startActivity(intent);
                     }
                 })

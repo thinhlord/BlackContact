@@ -18,7 +18,7 @@ public class Contact implements Parcelable {
     private ArrayList<String> phoneType;
     private ArrayList<String> mail;
     private ArrayList<String> mailType;
-    String accountType;
+    private String accountType;
 
     public Contact(String id, String name, Uri photo, String accountType, ArrayList<String> phone, ArrayList<String> phoneType,
                    ArrayList<String> mail, ArrayList<String> mailType) {
@@ -32,12 +32,21 @@ public class Contact implements Parcelable {
         this.mailType = mailType;
     }
 
+
     public String getId() {
         return id;
     }
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPhoto(Uri photo) {
+        this.photo = photo;
     }
 
     public Uri getPhoto() {
@@ -64,26 +73,21 @@ public class Contact implements Parcelable {
         return accountType;
     }
 
-    public void addPhones(ArrayList<String> newPhones) {
+    public void addPhones(ArrayList<String> newPhones, ArrayList<String> newTypes) {
         phone.addAll(newPhones);
+        phoneType.addAll(newTypes);
     }
 
-    public void addMails(ArrayList<String> mails) {
+    public void addMails(ArrayList<String> mails, ArrayList<String> newTypes) {
         mail.addAll(mails);
+        mailType.addAll(newTypes);
     }
 
-    public int haveThisPhone(String checkingPhone, String type) {
-        for (int i = 0; i < this.phone.size(); i++) {
-            if (phone.get(i).equals(checkingPhone) && phoneType.get(i).equals(type)) return i;
-        }
-        return -1;
-    }
-
-    public int haveThisMail(String checkingMail, String type) {
-        for (int i = 0; i < mail.size(); i++) {
-            if (mail.get(i).equals(checkingMail) && mailType.get(i).equals(type)) return i;
-        }
-        return -1;
+    public void clearPhoneMail() {
+        phone.clear();
+        mail.clear();
+        phoneType.clear();
+        mailType.clear();
     }
 
     protected Contact(Parcel in) {
@@ -91,25 +95,25 @@ public class Contact implements Parcelable {
         name = in.readString();
         photo = (Uri) in.readValue(Uri.class.getClassLoader());
         if (in.readByte() == 0x01) {
-            phone = new ArrayList<String>();
+            phone = new ArrayList<>();
             in.readList(phone, String.class.getClassLoader());
         } else {
             phone = null;
         }
         if (in.readByte() == 0x01) {
-            phoneType = new ArrayList<String>();
+            phoneType = new ArrayList<>();
             in.readList(phoneType, String.class.getClassLoader());
         } else {
             phoneType = null;
         }
         if (in.readByte() == 0x01) {
-            mail = new ArrayList<String>();
+            mail = new ArrayList<>();
             in.readList(mail, String.class.getClassLoader());
         } else {
             mail = null;
         }
         if (in.readByte() == 0x01) {
-            mailType = new ArrayList<String>();
+            mailType = new ArrayList<>();
             in.readList(mailType, String.class.getClassLoader());
         } else {
             mailType = null;

@@ -13,7 +13,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -27,7 +26,7 @@ public class MusicActivity extends BaseActivity implements View.OnClickListener 
     MaterialDialog dialog;
     boolean started = false;
 
-    private BroadcastReceiver gpsBRec = new BroadcastReceiver() {
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -107,7 +106,6 @@ public class MusicActivity extends BaseActivity implements View.OnClickListener 
                 }
                 break;
             case R.id.share:
-                Toast.makeText(getApplicationContext(), "Call", Toast.LENGTH_LONG).show();
                 shareMusic();
         }
     }
@@ -171,7 +169,7 @@ public class MusicActivity extends BaseActivity implements View.OnClickListener 
     public void onStop() {
         super.onStop();
         try {
-            LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(gpsBRec);
+            LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(broadcastReceiver);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -181,6 +179,6 @@ public class MusicActivity extends BaseActivity implements View.OnClickListener 
     @Override
     public void onResume() {
         super.onResume();
-        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(gpsBRec, new IntentFilter(MusicService.BROADCAST));
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(broadcastReceiver, new IntentFilter(MusicService.BROADCAST));
     }
 }

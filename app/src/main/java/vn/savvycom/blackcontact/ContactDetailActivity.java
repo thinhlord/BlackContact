@@ -1,5 +1,6 @@
 package vn.savvycom.blackcontact;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,12 +13,14 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.afollestad.materialdialogs.MaterialDialog;
 
 import vn.savvycom.blackcontact.Item.Contact;
 
 
 public class ContactDetailActivity extends BaseActivity implements View.OnClickListener{
-    public static final String EXTRA_CONTACT = "CONTACT";
     private Contact contact;
     private boolean favorite = false;
 
@@ -25,7 +28,7 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         enableHomeButton();
-        contact = getIntent().getParcelableExtra(EXTRA_CONTACT);
+        contact = getIntent().getParcelableExtra(GlobalObject.EXTRA_CONTACT);
         if (contact == null) {
             this.finish();
         } else {
@@ -37,6 +40,11 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
                 imageView.setImageResource(R.mipmap.ic_launcher);
             }
             ((TextView) findViewById(R.id.name)).setText(contact.getName());
+            favorite = DatabaseController.getInstance(this).isFavorite(contact.getId());
+            ImageButton call = (ImageButton) findViewById(R.id.button_call);
+            ImageButton text = (ImageButton) findViewById(R.id.button_text);
+            call.setOnClickListener(this);
+            text.setOnClickListener(this);
 
             LinearLayout phoneList = (LinearLayout) findViewById(R.id.phone_list);
             if (contact.getPhone().size() != 0) {
@@ -57,18 +65,18 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
             }
 
             ImageView typeImage = (ImageView) findViewById(R.id.place);
-            if (contact.getAccountType().contains("sim")) typeImage.setImageResource(R.drawable.ic_sim_card);
-            else if (contact.getAccountType().contains("google")) typeImage.setImageResource(R.drawable.icon_google);
+            if (contact.getAccountType() != null) {
+                if (contact.getAccountType().contains("sim"))
+                    typeImage.setImageResource(R.drawable.ic_sim_card);
+                else if (contact.getAccountType().contains("google"))
+                    typeImage.setImageResource(R.drawable.icon_google);
+                else typeImage.setImageResource(R.drawable.ic_phone);
+            }
             else typeImage.setImageResource(R.drawable.ic_phone);
-            favorite = DatabaseController.getInstance(this).isFavorite(contact.getId());
-            ImageButton call = (ImageButton) findViewById(R.id.button_call);
-            ImageButton text = (ImageButton) findViewById(R.id.button_text);
-            call.setOnClickListener(this);
-            text.setOnClickListener(this);
         }
     }
 
-    private void addPhoneView(String phone, String type, LinearLayout parent) {
+    private void addPhoneView(final String phone, String type, LinearLayout parent) {
         View newPhoneView = LayoutInflater.from(this).inflate(R.layout.detail_phone_number_layout, null);
         if (phone.equals("None")) {
             ((TextView) newPhoneView.findViewById(R.id.phone_type)).setText(phone);
@@ -91,11 +99,19 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
             }
             ((TextView) newPhoneView.findViewById(R.id.phone_type)).setText(typeStr);
             ((TextView) newPhoneView.findViewById(R.id.phone_number)).setText(phone);
+            ((ImageView) newPhoneView.findViewById(R.id.icon)).setImageResource(R.drawable.ic_call_grey);
+            newPhoneView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    call(phone);
+                }
+            });
+
         }
         parent.addView(newPhoneView);
     }
 
-    private void addMailView(String mail, String type, LinearLayout parent) {
+    private void addMailView(final String mail, String type, LinearLayout parent) {
         View newPhoneView = LayoutInflater.from(this).inflate(R.layout.detail_phone_number_layout, null);
         if (mail.equals("None")) {
             ((TextView) newPhoneView.findViewById(R.id.phone_type)).setText(mail);
@@ -118,6 +134,13 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
             }
             ((TextView) newPhoneView.findViewById(R.id.phone_type)).setText(typeStr);
             ((TextView) newPhoneView.findViewById(R.id.phone_number)).setText(mail);
+            ((ImageView) newPhoneView.findViewById(R.id.icon)).setImageResource(R.drawable.ic_mail_grey);
+            newPhoneView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    mailTo(mail);
+                }
+            });
         }
         parent.addView(newPhoneView);
     }
@@ -152,11 +175,12 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
                 if (favorite) FavoriteFragment.getInstance().onFavoriteAdded(contact);
                 else FavoriteFragment.getInstance().onFavoriteRemoved(contact);
                 invalidateOptionsMenu();
+                Toast.makeText(this, "Added " + contact.getName() + " to favorite", Toast.LENGTH_LONG).show();
                 return true;
             case R.id.action_edit:
                 Intent intent = new Intent(this, ContactEditorActivity.class);
-                intent.putExtra(ContactEditorActivity.EXTRA_CONTACT, contact);
-                startActivity(intent);
+                intent.putExtra(GlobalObject.EXTRA_CONTACT, contact);
+                startActivityForResult(intent, 2);
         }
 
         return super.onOptionsItemSelected(item);
@@ -166,14 +190,58 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.button_call:
-                String uri = "tel:" + contact.getPhone().get(0).trim() ;
-                Intent intent = new Intent(Intent.ACTION_DIAL);
-                intent.setData(Uri.parse(uri));
-                startActivity(intent);
+                call(null);
                 break;
             case R.id.button_text:
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.fromParts("sms", contact.getPhone().get(0), null)));
                 break;
         }
+    }
+
+    private void call(String phone) {
+        String uri;
+        if (phone == null) uri = "tel:" + contact.getPhone().get(0).trim();
+        else uri = "tel:" + phone.trim();
+        Intent intent = new Intent(Intent.ACTION_DIAL);
+        intent.setData(Uri.parse(uri));
+        startActivity(intent);
+    }
+
+    private void mailTo(String mail) {
+        Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts(
+                "mailto", mail, null));
+        ;
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 2) {
+            if (resultCode == RESULT_OK) {
+                if (data.getExtras().getBoolean(GlobalObject.EXTRA_MERGE)) {
+                    new MaterialDialog.Builder(this)
+                            .content("There is a contact with the same name as your edited one and they were merged.")
+                            .positiveText("OK")
+                            .dismissListener(new DialogInterface.OnDismissListener() {
+                                @Override
+                                public void onDismiss(DialogInterface dialogInterface) {
+                                    ContactDetailActivity.this.finish();
+                                }
+                            })
+                            .show();
+                } else if (data.getExtras().getBoolean(GlobalObject.EXTRA_DELETE)) {
+                    ContactDetailActivity.this.finish();
+                } else {
+                    Contact newContact = data.getExtras().getParcelable(GlobalObject.EXTRA_CONTACT);
+                    Intent intent = new Intent(this, ContactDetailActivity.class);
+                    intent.putExtra(GlobalObject.EXTRA_CONTACT, newContact);
+                    startActivity(intent);
+                    this.finish();
+                }
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }

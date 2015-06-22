@@ -30,4 +30,5 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_share">Share</string>
+    <string name="action_del">Delete</string>
 </resources>

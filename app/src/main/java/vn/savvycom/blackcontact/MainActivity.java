@@ -13,16 +13,15 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.astuetz.PagerSlidingTabStrip;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Locale;
 
 import vn.savvycom.blackcontact.Item.Contact;
@@ -40,7 +39,6 @@ public class MainActivity extends BaseActivity {
 
     SectionsPagerAdapter mSectionsPagerAdapter;
     ViewPager mViewPager;
-    private ArrayList<Contact> contacts = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,11 +56,11 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (contacts.size() == 0) {
+        if (GlobalObject.allContacts.size() == 0) {
             reload();
         } else {
-            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(0)).onContactLoaded(contacts);
-            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(1)).onContactLoaded(contacts);
+            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(0)).onContactLoaded();
+            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(1)).onContactLoaded();
         }
     }
 
@@ -108,15 +106,23 @@ public class MainActivity extends BaseActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1) {
             if (resultCode == RESULT_OK) {
+                if (data.getExtras().getBoolean(GlobalObject.EXTRA_MERGE)) {
+                    new MaterialDialog.Builder(this)
+                            .content("There is a contact with the same name as your added one and they were merged.")
+                            .positiveText("OK")
+                            .show();
+                }
                 reload();
 //                Contact newContact = loadContacts((Uri) data.getExtras().get("newID"));
 //                ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(0)).addItem(newContact);
+//                Contact newContact = data.getExtras().getParcelable("editContact");
+
             }
         }
     }
 
     private void loadContacts() {
-        contacts.clear();
+        GlobalObject.allContacts.clear();
         ContentResolver cr = getContentResolver();
         Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         if (cur.getCount() > 0) {
@@ -148,7 +154,6 @@ public class MainActivity extends BaseActivity {
                 while (pCur.moveToNext()) {
                     String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                     String phoneType = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
-                    Log.d("Phone", id + " " + phoneNo + " " + pCur.getString(pCur.getColumnIndex(ContactsContract.Data.RAW_CONTACT_ID)));
                     phones.add(phoneNo);
                     phoneTypes.add(phoneType);
                 }
@@ -171,12 +176,12 @@ public class MainActivity extends BaseActivity {
                 pCurs.close();
 
                 Uri photo = getDisplayPhotoUri(Long.parseLong(id));
-                contacts.add(new Contact(id, name, photo, accountType, phones, phoneTypes, mails, mailTypes));
+                GlobalObject.allContacts.add(new Contact(id, name, photo, accountType, phones, phoneTypes, mails, mailTypes));
             }
 
         }
         cur.close();
-        Collections.sort(contacts, new ContactComparator());
+        Collections.sort(GlobalObject.allContacts, new GlobalObject.ContactComparator());
     }
 
     public Uri getDisplayPhotoUri(long contactId) {
@@ -193,8 +198,7 @@ public class MainActivity extends BaseActivity {
     }
 
     public interface OnFragmentDatasetChanged {
-        void onContactLoaded(ArrayList<Contact> contacts);
-
+        void onContactLoaded();
         void onPreLoad();
     }
 
@@ -210,14 +214,8 @@ public class MainActivity extends BaseActivity {
         }
 
         protected void onPostExecute(Void voided) {
-            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(0)).onContactLoaded(contacts);
-            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(1)).onContactLoaded(contacts);
-        }
-    }
-
-    public static class ContactComparator implements Comparator<Contact> {
-        public int compare(Contact left, Contact right) {
-            return left.getName().compareTo(right.getName());
+            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(0)).onContactLoaded();
+            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(1)).onContactLoaded();
         }
     }
 

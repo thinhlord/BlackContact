@@ -31,8 +31,8 @@
     <ImageButton
         android:id="@+id/button_call"
         style="?android:attr/borderlessButtonStyle"
-        android:layout_width="80dp"
-        android:layout_height="match_parent"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"

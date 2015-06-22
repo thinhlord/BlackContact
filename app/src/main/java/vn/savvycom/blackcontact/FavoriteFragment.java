@@ -23,9 +23,8 @@ import vn.savvycom.blackcontact.Item.Contact;
 public class FavoriteFragment extends Fragment implements MainActivity.OnFragmentDatasetChanged {
 
     private static FavoriteFragment instance = null;
-    ArrayList<Contact> contacts = new ArrayList<>();
-    ArrayList<Contact> allContacts = new ArrayList<>();
-    ArrayList<Long> favorites = new ArrayList<>();
+    ArrayList<Contact> favoriteContacts = new ArrayList<>();
+    ArrayList<Long> favoriteIds = new ArrayList<>();
     View view;
     RecyclerView.LayoutManager mLayoutManager;
     Parcelable state;
@@ -64,8 +63,7 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
     }
 
     @Override
-    public void onContactLoaded(final ArrayList<Contact> allContacts) {
-        this.allContacts = allContacts;
+    public void onContactLoaded() {
         loadContactDone = true;
         if (loadViewDone) setContactIntoView();
     }
@@ -77,16 +75,16 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
 
     private void setContactIntoView() {
         if (!(loadContactDone && loadViewDone)) return;
-        contacts = new ArrayList<>();
-        favorites = DatabaseController.getInstance(getActivity()).loadFavorites();
-        for (Contact c : allContacts) {
-            if (favorites.contains(Long.parseLong(c.getId()))) {
-                contacts.add(c);
+        favoriteContacts = new ArrayList<>();
+        favoriteIds = DatabaseController.getInstance(getActivity()).loadFavorites();
+        for (Contact c : GlobalObject.allContacts) {
+            if (favoriteIds.contains(Long.parseLong(c.getId()))) {
+                favoriteContacts.add(c);
             }
         }
         ProgressBar progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
         progressBar.setVisibility(View.GONE);
-        mAdapter = new ContactAdapter(contacts);
+        mAdapter = new ContactAdapter(favoriteContacts, this.getActivity());
         mRecyclerView.setAdapter(mAdapter);
     }
 
@@ -104,7 +102,7 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
                     @Override
                     public void onItemClick(View view, int position) {
                         Intent intent = new Intent(getActivity(), ContactDetailActivity.class);
-                        intent.putExtra(ContactDetailActivity.EXTRA_CONTACT, contacts.get(position));
+                        intent.putExtra(GlobalObject.EXTRA_CONTACT, favoriteContacts.get(position));
                         startActivity(intent);
                     }
                 })
@@ -115,20 +113,20 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
     }
 
     public void onFavoriteAdded(Contact contact) {
-        contacts.add(contact);
+        favoriteContacts.add(contact);
         mAdapter.notifyDataSetChanged();
     }
 
     public void onFavoriteRemoved(Contact contact) {
         Contact removedContact = null;
-        for (Contact c : contacts) {
+        for (Contact c : favoriteContacts) {
             if (contact.getId().equals(c.getId())) {
                 removedContact = c;
                 break;
             }
         }
         if (removedContact != null) {
-            contacts.remove(removedContact);
+            favoriteContacts.remove(removedContact);
         }
         mAdapter.notifyDataSetChanged();
     }
