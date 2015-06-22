@@ -190,6 +190,12 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
 
             // phones
             //ArrayList<String> phones = new ArrayList<>();
+            // Bad method: remove all numbers then add all current numbers in the UI
+            operationList.add(ContentProviderOperation.newDelete(ContactsContract.Data.CONTENT_URI)
+                    .withSelection(ContactsContract.Data.RAW_CONTACT_ID + "=? and " + ContactsContract.Data.MIMETYPE + "=?",
+                            new String[]{contact.getId(), ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE})
+                    .build());
+
             for (int i = 0; i < phoneGroupLayout.getChildCount(); i++) {
                 String phoneNumber = ((EditText) phoneGroupLayout.getChildAt(i).findViewById(R.id.phone_number)).getText().toString();
                 int phoneType;
@@ -208,43 +214,46 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                         phoneType = ContactsContract.CommonDataKinds.Phone.TYPE_OTHER;
                         break;
                 }
-                operationList.add(ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
-                        .withSelection(ContactsContract.Data.CONTACT_ID + "=?" + " AND " + ContactsContract.Data.MIMETYPE + "=?",
-                                new String[]{contact.getId(),
-                                        ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE})
+                operationList.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                        .withValue(ContactsContract.Data.RAW_CONTACT_ID, contact.getId())
+                        .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
                         .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phoneNumber)
                         .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, phoneType)
                         .build());
                 //phones.add(phoneNumber);
             }
-//
-//            // mails
-//            //ArrayList<String> mails = new ArrayList<>();
-//            for (int i = 0; i < mailGroupLayout.getChildCount(); i++) {
-//                String email = ((EditText) mailGroupLayout.getChildAt(i).findViewById(R.id.email)).getText().toString();
-//                int mailType;
-//                int selected = ((Spinner) mailGroupLayout.getChildAt(i).findViewById(R.id.mail_type)).getSelectedItemPosition();
-//                switch (selected) {
-//                    case 0:
-//                        mailType = ContactsContract.CommonDataKinds.Email.TYPE_HOME;
-//                        break;
-//                    case 1:
-//                        mailType = ContactsContract.CommonDataKinds.Email.TYPE_MOBILE;
-//                        break;
-//                    case 2:
-//                        mailType = ContactsContract.CommonDataKinds.Email.TYPE_WORK;
-//                        break;
-//                    default:
-//                        mailType = ContactsContract.CommonDataKinds.Email.TYPE_OTHER;
-//                        break;
-//                }
-//                operationList.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
-//                        .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
-//                        .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE)
-//                        .withValue(ContactsContract.CommonDataKinds.Email.DATA, email)
-//                        .withValue(ContactsContract.CommonDataKinds.Email.TYPE, mailType)
-//                        .build());
-//            }
+
+            // mails
+            //ArrayList<String> mails = new ArrayList<>();
+            operationList.add(ContentProviderOperation.newDelete(ContactsContract.Data.CONTENT_URI)
+                    .withSelection(ContactsContract.Data.RAW_CONTACT_ID + "=? and " + ContactsContract.Data.MIMETYPE + "=?",
+                            new String[]{contact.getId(), ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE})
+                    .build());
+            for (int i = 0; i < mailGroupLayout.getChildCount(); i++) {
+                String email = ((EditText) mailGroupLayout.getChildAt(i).findViewById(R.id.email)).getText().toString();
+                int mailType;
+                int selected = ((Spinner) mailGroupLayout.getChildAt(i).findViewById(R.id.mail_type)).getSelectedItemPosition();
+                switch (selected) {
+                    case 0:
+                        mailType = ContactsContract.CommonDataKinds.Email.TYPE_HOME;
+                        break;
+                    case 1:
+                        mailType = ContactsContract.CommonDataKinds.Email.TYPE_MOBILE;
+                        break;
+                    case 2:
+                        mailType = ContactsContract.CommonDataKinds.Email.TYPE_WORK;
+                        break;
+                    default:
+                        mailType = ContactsContract.CommonDataKinds.Email.TYPE_OTHER;
+                        break;
+                }
+                operationList.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                        .withValue(ContactsContract.Data.RAW_CONTACT_ID, contact.getId())
+                        .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE)
+                        .withValue(ContactsContract.CommonDataKinds.Email.DATA, email)
+                        .withValue(ContactsContract.CommonDataKinds.Email.TYPE, mailType)
+                        .build());
+            }
             try {
                 getContentResolver().applyBatch(ContactsContract.AUTHORITY, operationList);
                 Intent returnIntent = new Intent();

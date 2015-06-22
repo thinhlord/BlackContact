@@ -13,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -122,57 +123,57 @@ public class MainActivity extends BaseActivity {
             while (cur.moveToNext()) {
                 String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
                 String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                if (Integer.parseInt(cur.getString(
-                        cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-                    // Get account type
-                    String accountType = null;
-                    Cursor aCur = cr.query(
-                            ContactsContract.RawContacts.CONTENT_URI,
-                            null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                            new String[]{id}, null);
-                    if (aCur != null && aCur.getCount() > 0) {
-                        aCur.moveToFirst();
-                        accountType = aCur.getString(aCur.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE));
-                        aCur.close();
-                    }
 
-                    // Get all phone numbers
-                    ArrayList<String> phones = new ArrayList<>();
-                    ArrayList<String> phoneTypes = new ArrayList<>();
-                    Cursor pCur = cr.query(
-                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                            null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                            new String[]{id}, null);
-                    while (pCur.moveToNext()) {
-                        String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                        String phoneType = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
-                        phones.add(phoneNo);
-                        phoneTypes.add(phoneType);
-                    }
-                    pCur.close();
-
-                    // Get all email
-                    ArrayList<String> mails = new ArrayList<>();
-                    ArrayList<String> mailTypes = new ArrayList<>();
-                    Cursor pCurs = cr.query(
-                            ContactsContract.CommonDataKinds.Email.CONTENT_URI,
-                            null,
-                            ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
-                            new String[]{id}, null);
-                    while (pCurs.moveToNext()) {
-                        String nextMail = pCurs.getString(pCurs.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS));
-                        String mailType = pCurs.getString(pCurs.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
-                        mails.add(nextMail);
-                        mailTypes.add(mailType);
-                    }
-                    pCurs.close();
-
-                    Uri photo = getDisplayPhotoUri(Long.parseLong(id));
-                    contacts.add(new Contact(id, name, photo, accountType, phones, phoneTypes, mails, mailTypes));
+                // Get account type
+                String accountType = null;
+                Cursor aCur = cr.query(
+                        ContactsContract.RawContacts.CONTENT_URI,
+                        null,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                        new String[]{id}, null);
+                if (aCur != null && aCur.getCount() > 0) {
+                    aCur.moveToFirst();
+                    accountType = aCur.getString(aCur.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE));
+                    aCur.close();
                 }
+
+                // Get all phone numbers
+                ArrayList<String> phones = new ArrayList<>();
+                ArrayList<String> phoneTypes = new ArrayList<>();
+                Cursor pCur = cr.query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        null,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                        new String[]{id}, null);
+                while (pCur.moveToNext()) {
+                    String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    String phoneType = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
+                    Log.d("Phone", id + " " + phoneNo + " " + pCur.getString(pCur.getColumnIndex(ContactsContract.Data.RAW_CONTACT_ID)));
+                    phones.add(phoneNo);
+                    phoneTypes.add(phoneType);
+                }
+                pCur.close();
+
+                // Get all email
+                ArrayList<String> mails = new ArrayList<>();
+                ArrayList<String> mailTypes = new ArrayList<>();
+                Cursor pCurs = cr.query(
+                        ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                        null,
+                        ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
+                        new String[]{id}, null);
+                while (pCurs.moveToNext()) {
+                    String nextMail = pCurs.getString(pCurs.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS));
+                    String mailType = pCurs.getString(pCurs.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
+                    mails.add(nextMail);
+                    mailTypes.add(mailType);
+                }
+                pCurs.close();
+
+                Uri photo = getDisplayPhotoUri(Long.parseLong(id));
+                contacts.add(new Contact(id, name, photo, accountType, phones, phoneTypes, mails, mailTypes));
             }
+
         }
         cur.close();
         Collections.sort(contacts, new ContactComparator());
