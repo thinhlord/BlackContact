@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import vn.savvycom.blackcontact.Item.Contact;
+
 /**
  * Created by ruler_000 on 10/04/2015.
  * Project: SoYBa

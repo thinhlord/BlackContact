@@ -5,8 +5,6 @@ import android.content.ContentUris;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -21,11 +19,12 @@ import android.view.MenuItem;
 import com.astuetz.PagerSlidingTabStrip;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Locale;
+
+import vn.savvycom.blackcontact.Item.Contact;
 
 //import com.twitter.sdk.android.Twitter;
 //import com.twitter.sdk.android.core.TwitterAuthConfig;
@@ -34,8 +33,8 @@ import java.util.Locale;
 public class MainActivity extends BaseActivity {
 
     // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
-    private static final String TWITTER_KEY = "XLPlZaIWZL80pJi27Ln5jnVF8";
-    private static final String TWITTER_SECRET = "zxRNnSpFyXPlg7YXCvdkbRgwKY3kHS9tllv2z9hSPfnUGyXfqH";
+//    private static final String TWITTER_KEY = "XLPlZaIWZL80pJi27Ln5jnVF8";
+//    private static final String TWITTER_SECRET = "zxRNnSpFyXPlg7YXCvdkbRgwKY3kHS9tllv2z9hSPfnUGyXfqH";
 
 
     SectionsPagerAdapter mSectionsPagerAdapter;
@@ -170,11 +169,7 @@ public class MainActivity extends BaseActivity {
                     }
                     pCurs.close();
 
-                    Bitmap photo = null;
-                    InputStream inputStream = openDisplayPhoto(Long.parseLong(id));
-                    if (inputStream != null) {
-                        photo = BitmapFactory.decodeStream(inputStream);
-                    }
+                    Uri photo = getDisplayPhotoUri(Long.parseLong(id));
                     contacts.add(new Contact(id, name, photo, accountType, phones, phoneTypes, mails, mailTypes));
                 }
             }
@@ -183,13 +178,14 @@ public class MainActivity extends BaseActivity {
         Collections.sort(contacts, new ContactComparator());
     }
 
-    public InputStream openDisplayPhoto(long contactId) {
+    public Uri getDisplayPhotoUri(long contactId) {
         Uri contactUri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId);
         Uri displayPhotoUri = Uri.withAppendedPath(contactUri, ContactsContract.Contacts.Photo.DISPLAY_PHOTO);
         try {
             AssetFileDescriptor fd =
                     getContentResolver().openAssetFileDescriptor(displayPhotoUri, "r");
-            return fd.createInputStream();
+            fd.createInputStream();
+            return displayPhotoUri;
         } catch (IOException e) {
             return null;
         }
@@ -203,8 +199,8 @@ public class MainActivity extends BaseActivity {
 
     private class LoadContactTask extends AsyncTask<Void, Void, Void> {
         protected void onPreExecute() {
-            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(0)).onContactLoaded(contacts);
-            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(1)).onContactLoaded(contacts);
+            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(0)).onPreLoad();
+            ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(1)).onPreLoad();
         }
 
         protected Void doInBackground(Void... voids) {

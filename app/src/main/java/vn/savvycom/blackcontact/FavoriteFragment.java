@@ -14,6 +14,8 @@ import android.widget.ProgressBar;
 
 import java.util.ArrayList;
 
+import vn.savvycom.blackcontact.Item.Contact;
+
 
 /**
  * A simple {@link Fragment} subclass.

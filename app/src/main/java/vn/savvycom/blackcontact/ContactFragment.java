@@ -11,9 +11,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import java.util.ArrayList;
+
+import vn.savvycom.blackcontact.Item.Contact;
 
 
 /**
@@ -80,7 +81,6 @@ public class ContactFragment extends Fragment implements MainActivity.OnFragment
                 new RecyclerItemClickListener(getActivity(), new RecyclerItemClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        Toast.makeText(getActivity(), contacts.get(position).getAccountType(), Toast.LENGTH_LONG).show();
                         Intent intent = new Intent(getActivity(), ContactDetailActivity.class);
                         intent.putExtra(ContactDetailActivity.EXTRA_CONTACT, contacts.get(position));
                         startActivity(intent);

@@ -13,6 +13,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import vn.savvycom.blackcontact.Item.Contact;
+
 
 public class ContactDetailActivity extends BaseActivity implements View.OnClickListener{
     public static final String EXTRA_CONTACT = "CONTACT";
@@ -30,7 +32,7 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
             setTitle(contact.getName());
             ImageView imageView = (ImageView) findViewById(R.id.photo);
             if (contact.getPhoto() != null) {
-                imageView.setImageBitmap(contact.getPhoto());
+                imageView.setImageURI(contact.getPhoto());
             } else {
                 imageView.setImageResource(R.mipmap.ic_launcher);
             }
