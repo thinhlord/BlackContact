@@ -9,6 +9,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -59,6 +61,15 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
                 context.startActivity(intent);
             }
         });
+        holder.photo.setImageURI(c.getPhoto());
+        holder.clickArea.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(context, ContactDetailActivity.class);
+                intent.putExtra(GlobalObject.EXTRA_CONTACT, c);
+                context.startActivity(intent);
+            }
+        });
     }
 
     // Return the size of your dataset (invoked by the layout manager)
@@ -74,12 +85,15 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         // each data item is just a string in this case
         public TextView name;
         public ImageButton call;
-        //public ImageView photo;
+        public ImageView photo;
+        public RelativeLayout clickArea;
 
         public ViewHolder(View v) {
             super(v);
             name = (TextView) v.findViewById(R.id.name);
             call = (ImageButton) v.findViewById(R.id.button_call);
+            photo = (ImageView) v.findViewById(R.id.photo);
+            clickArea = (RelativeLayout) v.findViewById(R.id.click_layout);
         }
     }
 }

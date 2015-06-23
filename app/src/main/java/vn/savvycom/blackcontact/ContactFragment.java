@@ -1,7 +1,6 @@
 package vn.savvycom.blackcontact;
 
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
@@ -70,16 +69,6 @@ public class ContactFragment extends Fragment implements MainActivity.OnFragment
         mRecyclerView.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecyclerView.addOnItemTouchListener(
-                new RecyclerItemClickListener(getActivity(), new RecyclerItemClickListener.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(View view, int position) {
-                        Intent intent = new Intent(getActivity(), ContactDetailActivity.class);
-                        intent.putExtra(GlobalObject.EXTRA_CONTACT, GlobalObject.allContacts.get(position));
-                        startActivity(intent);
-                    }
-                })
-        );
         loadViewDone = true;
         if (loadContactDone) setContactIntoView();
         return view;

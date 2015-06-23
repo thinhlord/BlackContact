@@ -17,4 +17,9 @@
         android:title="@string/action_edit"
         app:showAsAction="ifRoom"
         android:icon="@drawable/ic_edit_white"/>
+    <item
+        android:id="@+id/action_del"
+        android:title="@string/action_del"
+        app:showAsAction="never"
+        android:icon="@drawable/ic_delete_white" />
 </menu>

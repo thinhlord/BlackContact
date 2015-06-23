@@ -1,5 +1,7 @@
 package vn.savvycom.blackcontact;
 
+import android.content.ContentProviderOperation;
+import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -16,6 +18,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import vn.savvycom.blackcontact.Item.Contact;
 
@@ -181,9 +186,55 @@ public class ContactDetailActivity extends BaseActivity implements View.OnClickL
                 Intent intent = new Intent(this, ContactEditorActivity.class);
                 intent.putExtra(GlobalObject.EXTRA_CONTACT, contact);
                 startActivityForResult(intent, 2);
+                return true;
+            case R.id.action_del:
+                new MaterialDialog.Builder(this)
+                        .title("Confirm delete")
+                        .content("Do you want to delete this contact?")
+                        .positiveText("Yes")
+                        .negativeText("No")
+                        .callback(new MaterialDialog.ButtonCallback() {
+                            @Override
+                            public void onPositive(MaterialDialog dialog) {
+                                deleteContact();
+                                super.onPositive(dialog);
+                            }
+                        })
+                        .show();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void deleteContact() {
+        final ContentResolver cr = getContentResolver();
+        final ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+        ops.add(ContentProviderOperation
+                .newDelete(ContactsContract.RawContacts.CONTENT_URI)
+                .withSelection(
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID
+                                + " = ?",
+                        new String[]{contact.getId()})
+                .build());
+        try {
+            cr.applyBatch(ContactsContract.AUTHORITY, ops);
+            Intent returnIntent = new Intent();
+            setResult(RESULT_OK, returnIntent);
+            returnIntent.putExtra(GlobalObject.EXTRA_DELETE, true);
+            Iterator<Contact> iterator = GlobalObject.allContacts.iterator();
+            while (true) {
+                if (!(iterator.hasNext())) break;
+                Contact c = iterator.next();
+                if (c.getId().equals(contact.getId())) {
+                    GlobalObject.allContacts.remove(c);
+                    break;
+                }
+            }
+            finish();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

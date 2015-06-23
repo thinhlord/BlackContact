@@ -5,6 +5,9 @@ import android.content.ContentProviderResult;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.view.LayoutInflater;
@@ -20,7 +23,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -32,6 +39,9 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
     ArrayAdapter<CharSequence> phoneTypeAdapter;
     private Contact contact;
     private boolean add = true;
+    private ImageView photo;
+    private Uri photoUri = null;
+    private Bitmap mBitmap;
     private LinearLayout phoneGroupLayout, mailGroupLayout;
 
     @Override
@@ -54,12 +64,13 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
         } else {
             add = false;
             setTitle("Edit");
-            ImageView imageView = (ImageView) findViewById(R.id.photo);
+            photo = (ImageView) findViewById(R.id.photo);
             if (contact.getPhoto() != null) {
-                imageView.setImageURI(contact.getPhoto());
+                photo.setImageURI(contact.getPhoto());
             } else {
-                imageView.setImageResource(R.mipmap.ic_launcher);
+                photo.setImageResource(R.mipmap.ic_launcher);
             }
+            photo.setOnClickListener(this);
             ((TextView) findViewById(R.id.name)).setText(contact.getName());
             if (contact.getPhone().size() == 0) {
                 addPhoneView(null, null);
@@ -202,6 +213,28 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                 mailTypes.add("" + mailType);
             }
 
+            // photo
+            if (photoUri != null) {
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                if (mBitmap != null) {    // If an image is selected successfully
+                    mBitmap.compress(Bitmap.CompressFormat.PNG, 75, stream);
+
+                    // Adding insert operation to operations list
+                    // to insert Photo in the table ContactsContract.Data
+                    operationList.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                            .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                            .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE)
+                            .withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, stream.toByteArray())
+                            .build());
+
+                    try {
+                        stream.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
             try {
                 ContentProviderResult[] results = getContentResolver().applyBatch(ContactsContract.AUTHORITY, operationList);
                 String id = results[0].uri.getLastPathSegment();
@@ -216,7 +249,7 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                     accountType = aCur.getString(aCur.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE));
                     aCur.close();
                 }
-                contact = new Contact(id, name.getText().toString(), null, accountType, phones, phoneTypes, mails, mailTypes);
+                contact = new Contact(id, name.getText().toString(), photoUri, accountType, phones, phoneTypes, mails, mailTypes);
                 Intent returnIntent = new Intent();
                 setResult(RESULT_OK, returnIntent);
                 if (sendNewContactBack) {
@@ -319,13 +352,36 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
             }
             contact.addMails(mails, mailTypes);
 
+            if (photoUri != null) {
+                contact.setPhoto(photoUri);
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                if (mBitmap != null) {    // If an image is selected successfully
+                    mBitmap.compress(Bitmap.CompressFormat.PNG, 75, stream);
+
+                    // Adding insert operation to operations list
+                    // to insert Photo in the table ContactsContract.Data
+                    operationList.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                            .withValue(ContactsContract.Data.RAW_CONTACT_ID, contact.getId())
+                            .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE)
+                            .withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, stream.toByteArray())
+                            .build());
+
+                    try {
+                        stream.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
             try {
                 getContentResolver().applyBatch(ContactsContract.AUTHORITY, operationList);
                 Intent returnIntent = new Intent();
                 setResult(RESULT_OK, returnIntent);
                 returnIntent.putExtra(GlobalObject.EXTRA_CONTACT, contact);
                 Iterator<Contact> iterator = GlobalObject.allContacts.iterator();
-                while (iterator.hasNext()) {
+                while (true) {
+                    if (!(iterator.hasNext())) break;
                     Contact c = iterator.next();
                     if (c.getId().equals(contact.getId())) {
                         GlobalObject.allContacts.remove(c);
@@ -350,6 +406,53 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
             case R.id.add_mail:
                 addEmailView(null, null);
                 break;
+            case R.id.photo:
+                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+                photoPickerIntent.setType("image/*");
+                startActivityForResult(photoPickerIntent, 1);
+        }
+    }
+
+    Target target = new Target() {
+        MaterialDialog md;
+
+        @Override
+        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+            mBitmap = bitmap;
+            photo.setImageBitmap(bitmap);
+            md.dismiss();
+        }
+
+        @Override
+        public void onBitmapFailed(Drawable errorDrawable) {
+
+        }
+
+        @Override
+        public void onPrepareLoad(Drawable placeHolderDrawable) {
+            md = new MaterialDialog.Builder(ContactEditorActivity.this)
+                    .title("Loading")
+                    .content("Wait a bit...")
+                    .autoDismiss(false)
+                    .progress(true, 0)
+                    .show();
+        }
+
+    };
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
+                photoUri = data.getData();
+                Picasso.with(this)
+                        .load(photoUri)
+                        .resize(500, 500)
+                        .centerInside()
+                        .into(target);
+
+            }
         }
     }
 
@@ -376,8 +479,9 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
             }
             spinner.setSelection(typeInt);
         }
+        EditText phoneView = (EditText) newPhoneView.findViewById(R.id.phone_number);
+        phoneView.requestFocus();
         if (phone != null) {
-            EditText phoneView = (EditText) newPhoneView.findViewById(R.id.phone_number);
             phoneView.setText(phone);
         }
         newPhoneView.findViewById(R.id.delete_view).setOnClickListener(new View.OnClickListener() {
@@ -412,8 +516,9 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
             }
             spinner.setSelection(typeInt);
         }
+        EditText email = (EditText) newMailView.findViewById(R.id.email);
+        email.requestFocus();
         if (mailAddress != null) {
-            EditText email = (EditText) newMailView.findViewById(R.id.email);
             email.setText(mailAddress);
         }
         newMailView.findViewById(R.id.delete_view).setOnClickListener(new View.OnClickListener() {
@@ -441,7 +546,8 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
             setResult(RESULT_OK, returnIntent);
             returnIntent.putExtra(GlobalObject.EXTRA_DELETE, true);
             Iterator<Contact> iterator = GlobalObject.allContacts.iterator();
-            while (iterator.hasNext()) {
+            while (true) {
+                if (!(iterator.hasNext())) break;
                 Contact c = iterator.next();
                 if (c.getId().equals(contact.getId())) {
                     GlobalObject.allContacts.remove(c);
