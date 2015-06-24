@@ -72,6 +72,11 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         });
     }
 
+    public void setContacts(ArrayList<Contact> contacts) {
+        this.contacts = contacts;
+        this.notifyDataSetChanged();
+    }
+
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {

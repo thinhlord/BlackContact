@@ -323,6 +323,7 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
                     .withSelection(ContactsContract.Data.RAW_CONTACT_ID + "=? and " + ContactsContract.Data.MIMETYPE + "=?",
                             new String[]{contact.getId(), ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE})
                     .build());
+
             for (int i = 0; i < mailGroupLayout.getChildCount(); i++) {
                 String email = ((EditText) mailGroupLayout.getChildAt(i).findViewById(R.id.email)).getText().toString();
                 int mailType;

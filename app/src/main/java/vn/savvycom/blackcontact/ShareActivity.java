@@ -5,7 +5,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -19,8 +18,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.facebook.FacebookSdk;
@@ -42,7 +43,7 @@ import io.fabric.sdk.android.Fabric;
 
 public class ShareActivity extends BaseActivity implements View.OnClickListener {
 
-    private static final long LIMIT = 12582912;
+    private static final long LIMIT = 125829120; // 120MB
     private static final String[] SHARE_OVER = {"Facebook", "Twitter", "Email"};
     FrameLayout shareContent;
     int shareType = 0;
@@ -202,43 +203,6 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
             if (resultCode == RESULT_OK) {
                 Uri selectedPhotoUri = data.getData();
                 new CacheImageTask(this).execute(selectedPhotoUri);
-//                String[] filePathColumn = {MediaStore.Images.Media.DATA};
-//
-//                Cursor cursor = getContentResolver().query(selectedPhotoUri, filePathColumn, null, null, null);
-//                cursor.moveToFirst();
-//
-//                int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-//                String filePath = cursor.getString(columnIndex);
-//                cursor.close();
-//
-//                File file = new File(filePath);
-//
-//                if (file.length() > LIMIT) {
-//                    Toast.makeText(this, "Cannot share photo over 12MB", Toast.LENGTH_LONG).show();
-//                } else {
-//                    highlightButton(shareType);
-//                    shareContent.removeAllViews();
-//                    View photoView = LayoutInflater.from(this).inflate(R.layout.share_media_child_layout, shareContent);
-//                    ((TextView) photoView.findViewById(R.id.file_name)).setText(filePath);
-//                    try {
-//                        Picasso.with(this)
-//                                .load(selectedPhotoUri)
-//                                .resize(900, 900)
-//                                .into((ImageView) photoView.findViewById(R.id.thumbs));
-//
-//                        Bitmap bitmapForShare = Picasso.with(this)
-//                                .load(selectedPhotoUri)
-//                                .get();
-//
-//                        SharePhoto photo = new SharePhoto.Builder()
-//                                .setBitmap(bitmapForShare)
-//                                .build();
-//                        content = new SharePhotoContent.Builder().addPhoto(photo).build();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//
-//                }
             }
         } else if (requestCode == VIDEO_TYPE) {
             if (resultCode == RESULT_OK) {
@@ -259,11 +223,16 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
                 } else {
                     highlightButton(shareType);
                     shareContent.removeAllViews();
-                    View videoView = LayoutInflater.from(this).inflate(R.layout.share_media_child_layout, shareContent);
-                    Bitmap bMap = ThumbnailUtils.createVideoThumbnail(shareFilePath, MediaStore.Video.Thumbnails.FULL_SCREEN_KIND);
-                    ImageView imageView = (ImageView) videoView.findViewById(R.id.thumbs);
-                    imageView.setImageBitmap(bMap);
-                    imageView.setOnClickListener(this);
+                    View videoView = LayoutInflater.from(this).inflate(R.layout.share_video_child_layout, shareContent);
+//                    Bitmap bMap = ThumbnailUtils.createVideoThumbnail(shareFilePath, MediaStore.Video.Thumbnails.FULL_SCREEN_KIND);
+//                    ImageView imageView = (ImageView) videoView.findViewById(R.id.thumbs);
+//                    imageView.setImageBitmap(bMap);
+//                    imageView.setOnClickListener(this);
+                    VideoView videoPanel = (VideoView) videoView.findViewById(R.id.video_panel);
+                    MediaController controller = new MediaController(this);
+                    videoPanel.setMediaController(controller);
+                    videoPanel.setVideoPath(file.getAbsolutePath());
+                    videoPanel.start();
                     ((TextView) videoView.findViewById(R.id.file_name)).setText(shareFilePath);
                     ShareVideo video = new ShareVideo.Builder().setLocalUrl(selectedVideoUri).build();
                     content = new ShareVideoContent.Builder().setVideo(video).build();
@@ -276,7 +245,7 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
         shareFilePath = filePath;
         highlightButton(shareType);
         shareContent.removeAllViews();
-        View photoView = LayoutInflater.from(this).inflate(R.layout.share_media_child_layout, shareContent);
+        View photoView = LayoutInflater.from(this).inflate(R.layout.share_photo_child_layout, shareContent);
         ((TextView) photoView.findViewById(R.id.file_name)).setText(filePath);
         try {
             ImageView imageView = (ImageView) photoView.findViewById(R.id.thumbs);

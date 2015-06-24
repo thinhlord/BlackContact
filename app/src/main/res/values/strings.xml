@@ -31,4 +31,6 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_share">Share</string>
     <string name="action_del">Delete</string>
+    <string name="search_title">Search</string>
+    <string name="search_hint">Search...</string>
 </resources>

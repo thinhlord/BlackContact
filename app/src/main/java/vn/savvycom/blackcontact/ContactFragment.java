@@ -20,6 +20,7 @@ public class ContactFragment extends Fragment implements MainActivity.OnFragment
     private static ContactFragment instance = null;
     View view;
     Parcelable state;
+    ContactAdapter mAdapter;
     RecyclerView.LayoutManager mLayoutManager;
     boolean loadContactDone = false, loadViewDone = false;
     private RecyclerView mRecyclerView;
@@ -49,11 +50,17 @@ public class ContactFragment extends Fragment implements MainActivity.OnFragment
         }
     }
 
+    @Override
+    public void onFilter(String query) {
+        if (!(loadContactDone && loadViewDone)) return;
+        mAdapter.setContacts(MainActivity.contactFilter(GlobalObject.allContacts, query));
+    }
+
     private void setContactIntoView() {
         if (!(loadContactDone && loadViewDone)) return;
         ProgressBar progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
         progressBar.setVisibility(View.GONE);
-        RecyclerView.Adapter mAdapter = new ContactAdapter(GlobalObject.allContacts, this.getActivity());
+        mAdapter = new ContactAdapter(GlobalObject.allContacts, this.getActivity());
         //mRecyclerView.removeAllViews();
         mRecyclerView.setVisibility(View.VISIBLE);
         mRecyclerView.swapAdapter(mAdapter, false);

@@ -12,7 +12,9 @@ import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.SearchView;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -30,7 +32,7 @@ import vn.savvycom.blackcontact.Item.Contact;
 //import com.twitter.sdk.android.core.TwitterAuthConfig;
 
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements SearchView.OnQueryTextListener {
 
     // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
 //    private static final String TWITTER_KEY = "XLPlZaIWZL80pJi27Ln5jnVF8";
@@ -39,6 +41,7 @@ public class MainActivity extends BaseActivity {
 
     SectionsPagerAdapter mSectionsPagerAdapter;
     ViewPager mViewPager;
+    SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +67,25 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+    public static ArrayList<Contact> contactFilter(ArrayList<Contact> input, String query) {
+        query = query.toLowerCase();
+
+        final ArrayList<Contact> filteredModelList = new ArrayList<>();
+        for (Contact model : input) {
+            if (model.getName().toLowerCase().contains(query)) {
+                filteredModelList.add(model);
+            } else {
+                for (String phone : model.getPhone()) {
+                    if (phone.contains(query)) {
+                        filteredModelList.add(model);
+                        break;
+                    }
+                }
+            }
+        }
+        return filteredModelList;
+    }
+
     public void reload() {
         new LoadContactTask().execute();
     }
@@ -75,8 +97,13 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        if (searchView != null) {
+            searchView.setOnQueryTextListener(this);
+        }
+
         return true;
     }
 
@@ -100,6 +127,12 @@ public class MainActivity extends BaseActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (searchView != null && !searchView.isIconified()) searchView.setIconified(true);
+        else super.onBackPressed();
     }
 
     @Override
@@ -197,9 +230,23 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(0)).onFilter(newText);
+        ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(1)).onFilter(newText);
+        return false;
+    }
+
     public interface OnFragmentDatasetChanged {
         void onContactLoaded();
         void onPreLoad();
+
+        void onFilter(String query);
     }
 
     private class LoadContactTask extends AsyncTask<Void, Void, Void> {

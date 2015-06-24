@@ -30,7 +30,7 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
     boolean loadContactDone = false;
     boolean loadViewDone = false;
     private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mAdapter;
+    private ContactAdapter mAdapter;
 
     public FavoriteFragment() {
     }
@@ -70,6 +70,12 @@ public class FavoriteFragment extends Fragment implements MainActivity.OnFragmen
     @Override
     public void onPreLoad() {
 
+    }
+
+    @Override
+    public void onFilter(String query) {
+        if (!(loadContactDone && loadViewDone)) return;
+        mAdapter.setContacts(MainActivity.contactFilter(favoriteContacts, query));
     }
 
     private void setContactIntoView() {
