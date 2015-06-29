@@ -43,6 +43,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     ViewPager mViewPager;
     SearchView searchView;
     MenuItem searchItem;
+    LoadContactTask task;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +89,8 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     }
 
     public void reload() {
-        new LoadContactTask().execute();
+        task = new LoadContactTask();
+        task.execute();
     }
 
     @Override
@@ -264,6 +266,12 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
             ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(0)).onContactLoaded();
             ((OnFragmentDatasetChanged) mSectionsPagerAdapter.getItem(1)).onContactLoaded();
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (task != null) task.cancel(true);
     }
 
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
