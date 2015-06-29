@@ -281,7 +281,7 @@ public class ContactEditorActivity extends BaseActivity implements View.OnClickL
             // phones
             // Bad method: remove all numbers then add all current numbers in the UI
             operationList.add(ContentProviderOperation.newDelete(ContactsContract.Data.CONTENT_URI)
-                    .withSelection(ContactsContract.Data.RAW_CONTACT_ID + "=? and " + ContactsContract.Data.MIMETYPE + "=?",
+                    .withSelection(ContactsContract.Data.CONTACT_ID + "=? and " + ContactsContract.Data.MIMETYPE + "=?",
                             new String[]{contact.getId(), ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE})
                     .build());
 

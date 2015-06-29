@@ -42,6 +42,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     SectionsPagerAdapter mSectionsPagerAdapter;
     ViewPager mViewPager;
     SearchView searchView;
+    MenuItem searchItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,12 +99,11 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        MenuItem searchItem = menu.findItem(R.id.action_search);
+        searchItem = menu.findItem(R.id.action_search);
         searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         if (searchView != null) {
             searchView.setOnQueryTextListener(this);
         }
-
         return true;
     }
 
@@ -131,7 +131,7 @@ public class MainActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public void onBackPressed() {
-        if (searchView != null && !searchView.isIconified()) searchView.setIconified(true);
+        if (searchView != null && !searchView.isIconified()) searchItem.collapseActionView();
         else super.onBackPressed();
     }
 

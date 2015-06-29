@@ -128,7 +128,8 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
                 shareType = LINK_TYPE;
                 highlightButton(shareType);
                 shareContent.removeAllViews();
-                LayoutInflater.from(this).inflate(R.layout.share_link_child_layout, shareContent);
+                View v = LayoutInflater.from(this).inflate(R.layout.share_link_child_layout, shareContent);
+                ((EditText) v.findViewById(R.id.content_link)).requestFocus();
                 break;
             case R.id.btn_photo:
                 shareType = PHOTO_TYPE;
@@ -148,7 +149,7 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
                 break;
             case R.id.btn_share:
                 if (shareType == LINK_TYPE) {
-                    shareLink = ((TextView) shareContent.getChildAt(0).findViewById(R.id.content_link)).getText().toString();
+                    shareLink = ((EditText) shareContent.getChildAt(0).findViewById(R.id.content_link)).getText().toString();
                     if (shareLink.equals("")) {
                         Toast.makeText(this, "Link is empty, wth do you want to share? Nothing?", Toast.LENGTH_LONG).show();
                         return;
