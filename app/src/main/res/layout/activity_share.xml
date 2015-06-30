@@ -37,6 +37,15 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:text="Text"
+            android:id="@+id/btn_text" />
+
+        <Button
+            android:onClick="onClick"
+            style="?android:buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Link"
             android:id="@+id/btn_link" />
 
@@ -82,7 +91,7 @@
             android:id="@+id/desc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Description"
+            android:hint="Message / Description"
             android:maxLines="3"
             android:layout_below="@+id/share_content"
             android:layout_alignParentLeft="true"

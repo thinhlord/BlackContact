@@ -16,7 +16,7 @@
         android:layout_marginTop="10dp"
         android:layout_marginBottom="10dp"
         android:inputType="textUri"
-        android:hint="Type/paste your link here!" />
+        android:hint="Type / paste your link here!" />
 
     </android.support.design.widget.TextInputLayout>
 </LinearLayout>
