@@ -3,6 +3,8 @@ package vn.savvycom.blackcontact;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -14,6 +16,8 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -37,6 +41,7 @@ import com.twitter.sdk.android.tweetcomposer.TweetComposer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -47,7 +52,8 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
     private static final String[] SHARE_OVER = {"Facebook", "Twitter", "Email"};
     FrameLayout shareContent;
     int shareType = 0;
-    Button link, photo, video;
+    Button text, link, photo, video;
+    ArrayList<Button> buttons = new ArrayList<>();
     String shareFilePath, shareLink;
     ShareContent content;
     public static final int LINK_TYPE = 1;
@@ -65,32 +71,22 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
         setTitle("Share all you have!");
         shareContent = (FrameLayout) findViewById(R.id.share_content);
         link = (Button) findViewById(R.id.btn_link);
+        text = (Button) findViewById(R.id.btn_text);
         photo = (Button) findViewById(R.id.btn_photo);
         video = (Button) findViewById(R.id.btn_video);
+        buttons.add(text);
+        buttons.add(link);
+        buttons.add(photo);
+        buttons.add(video);
+        highlightButton(0);
     }
 
     private void highlightButton(int type) {
-        switch (type) {
-            case LINK_TYPE:
-                link.setTextColor(getResources().getColor(R.color.md_red_500));
-                photo.setTextColor(getResources().getColor(R.color.md_green_500));
-                video.setTextColor(getResources().getColor(R.color.md_green_500));
-                break;
-            case PHOTO_TYPE:
-                link.setTextColor(getResources().getColor(R.color.md_green_500));
-                photo.setTextColor(getResources().getColor(R.color.md_red_500));
-                video.setTextColor(getResources().getColor(R.color.md_green_500));
-                break;
-            case VIDEO_TYPE:
-                link.setTextColor(getResources().getColor(R.color.md_green_500));
-                photo.setTextColor(getResources().getColor(R.color.md_green_500));
-                video.setTextColor(getResources().getColor(R.color.md_red_500));
-                break;
-            default:
-                link.setTextColor(getResources().getColor(R.color.md_green_500));
-                photo.setTextColor(getResources().getColor(R.color.md_green_500));
-                video.setTextColor(getResources().getColor(R.color.md_green_500));
-                break;
+        int index = 0;
+        for (Button b : buttons) {
+            if (index == type) b.setTextColor(getResources().getColor(R.color.md_red_500));
+            else b.setTextColor(getResources().getColor(R.color.md_green_500));
+            index++;
         }
     }
 
@@ -124,12 +120,18 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.btn_text:
+                shareType = 0;
+                highlightButton(shareType);
+                shareContent.removeAllViews();
+                shareLink = "";
+                break;
             case R.id.btn_link:
                 shareType = LINK_TYPE;
                 highlightButton(shareType);
                 shareContent.removeAllViews();
                 View v = LayoutInflater.from(this).inflate(R.layout.share_link_child_layout, shareContent);
-                ((EditText) v.findViewById(R.id.content_link)).requestFocus();
+                v.findViewById(R.id.content_link).requestFocus();
                 break;
             case R.id.btn_photo:
                 shareType = PHOTO_TYPE;
@@ -155,6 +157,8 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
                         return;
                     }
                     content = new ShareLinkContent.Builder().setContentUrl(Uri.parse(shareLink)).build();
+                } else if (shareType == 0) {
+                    content = new ShareLinkContent.Builder().setContentUrl(Uri.parse("")).build();
                 }
                 final String des = ((EditText) findViewById(R.id.desc)).getText().toString();
                 new MaterialDialog.Builder(this)
@@ -168,13 +172,10 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
                                         shareDialog.show(content);
                                         break;
                                     case 1:
-                                        TweetComposer.Builder builder = new TweetComposer.Builder(ShareActivity.this)
-                                                .text(des)
-                                                .image(Uri.fromFile(new File(shareFilePath)));
-                                        builder.show();
+                                        shareTwitter(des);
                                         break;
                                     case 2:
-                                        if (shareType != LINK_TYPE) {
+                                        if (shareType != LINK_TYPE && shareType != 0) {
                                             Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
                                             emailIntent.setType("application/image");
                                             emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, des);
@@ -195,6 +196,47 @@ public class ShareActivity extends BaseActivity implements View.OnClickListener 
                         .show();
                 break;
         }
+    }
+
+    private void shareTwitter(String des) {
+        PackageManager pkManager = getPackageManager();
+        try {
+            PackageInfo pkgInfo = pkManager.getPackageInfo("com.twitter.android", 0);
+            String getPkgInfo = pkgInfo.toString();
+
+            if (getPkgInfo.equals("com.twitter.android")) {
+                TweetComposer.Builder builder;
+                if (shareType == PHOTO_TYPE)
+                    builder = new TweetComposer.Builder(ShareActivity.this)
+                            .text(des)
+                            .image(Uri.fromFile(new File(shareFilePath)));
+                else
+                    builder = new TweetComposer.Builder(ShareActivity.this)
+                            .text(des + "\n" + shareLink);
+                builder.show();
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            // APP NOT INSTALLED
+
+            WebView wv = new WebView(this);
+            if (shareType == LINK_TYPE || shareType == 0)
+                wv.loadUrl("https://twitter.com/intent/tweet?text=" + des + " " + shareLink);
+            else {
+                wv.loadUrl("https://twitter.com/intent/tweet?text=" + des);
+                Toast.makeText(this, "You can only share photo with Twitter app.", Toast.LENGTH_LONG).show();
+            }
+            wv.setWebViewClient(new WebViewClient() {
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                    view.loadUrl(url);
+                    return true;
+                }
+            });
+            new MaterialDialog.Builder(this)
+                    .customView(wv, false)
+                    .show();
+        }
+
     }
 
     @Override
